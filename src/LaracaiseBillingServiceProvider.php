@@ -10,9 +10,8 @@ use Laracaise\Billing\Console\Commands\BillingInstallCommand;
 use Laracaise\Billing\Console\Commands\BillingProcessRenewalsCommand;
 use Laracaise\Billing\Console\Commands\BillingResetUsageCommand;
 use Laracaise\Billing\Console\Commands\BillingSyncCommand;
-use Laracaise\Billing\Http\Middleware\EnsureFeatureAvailable;
-use Laracaise\Billing\Http\Middleware\EnsureNotSuspended;
-use Laracaise\Billing\Http\Middleware\EnsureSubscriptionActive;
+use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
+use Laracaise\Billing\Http\Middleware\MiddlewareAliasRegistrar;
 use Laracaise\Billing\Services\FeatureService;
 use Laracaise\Billing\Services\UsageService;
 
@@ -57,10 +56,15 @@ class LaracaiseBillingServiceProvider extends ServiceProvider
 
     private function registerMiddleware(): void
     {
-        $router = $this->app['router'];
+        MiddlewareAliasRegistrar::registerOnRouter($this->app['router']);
 
-        $router->aliasMiddleware('billing.active', EnsureSubscriptionActive::class);
-        $router->aliasMiddleware('billing.feature', EnsureFeatureAvailable::class);
-        $router->aliasMiddleware('billing.not_suspended', EnsureNotSuspended::class);
+        // Also register on the kernel when it is first resolved. Testbench's
+        // resolveApplicationHttpMiddlewares() hook resets $middlewareAliases on
+        // the kernel after the service provider boots; calling afterResolving here
+        // ensures billing aliases survive that reset in all bootstrap contexts.
+        $this->app->afterResolving(
+            HttpKernelContract::class,
+            fn ($kernel) => MiddlewareAliasRegistrar::registerOnKernel($kernel),
+        );
     }
 }

@@ -100,3 +100,34 @@ it('rejects route access when the subscription is suspended', function () {
     $this->get("/middleware-suspended/{$owner->id}")
         ->assertForbidden();
 });
+
+// ── Grace period ───────────────────────────────────────────────────────────────
+
+it('allows route access when the subscription is cancelled but still within the grace period', function () {
+    $owner = billingMiddlewareOwner([
+        'status' => SubscriptionStatus::Cancelled,
+        'current_period_end' => now()->addDays(3),
+    ]);
+
+    $this->get("/middleware-active/{$owner->id}")
+        ->assertOk();
+});
+
+it('rejects route access when the subscription is cancelled and the grace period has expired', function () {
+    $owner = billingMiddlewareOwner([
+        'status' => SubscriptionStatus::Cancelled,
+        'current_period_end' => now()->subDay(),
+    ]);
+
+    $this->get("/middleware-active/{$owner->id}")
+        ->assertStatus(402);
+});
+
+// ── No subscription ────────────────────────────────────────────────────────────
+
+it('rejects route access when the billable has no subscription at all', function () {
+    $owner = BillableModel::create(['name' => 'No Subscription Owner']);
+
+    $this->get("/middleware-active/{$owner->id}")
+        ->assertStatus(402);
+});

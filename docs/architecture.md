@@ -86,11 +86,11 @@ Reads the billable's active subscription, looks up the feature limit on the plan
 
 **Concurrency control** is configured via `config('laracaise-billing.usage_tracking.locking')`:
 
-| Value | Behaviour |
-|---|---|
-| `atomic` | Wraps the read-check-increment in a single DB transaction. Re-checks the aggregate `SUM(quantity)` inside the transaction before inserting the new `UsageRecord`, so a concurrent request that passes the initial check cannot cause an overage. **Default.** |
-| `pessimistic` | Acquires a `SELECT FOR UPDATE` lock on the subscription row before reading usage, then inserts within the same transaction. Stronger guarantee; higher lock contention. |
-| `none` | No locking. Acceptable only in low-concurrency environments where minor over-counting is tolerable. |
+| Value         | Behaviour                                                                                                                                                                                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `atomic`      | Wraps the read-check-increment in a single DB transaction. Re-checks the aggregate `SUM(quantity)` inside the transaction before inserting the new `UsageRecord`, so a concurrent request that passes the initial check cannot cause an overage. **Default.** |
+| `pessimistic` | Acquires a `SELECT FOR UPDATE` lock on the subscription row before reading usage, then inserts within the same transaction. Stronger guarantee; higher lock contention.                                                                                       |
+| `none`        | No locking. Acceptable only in low-concurrency environments where minor over-counting is tolerable.                                                                                                                                                           |
 
 The limit is always re-verified inside the DB transaction before the `UsageRecord` insert, regardless of the locking mode.
 
@@ -132,18 +132,18 @@ $this->app->alias(BillingManager::class, 'billing');
 
 ## Event catalogue
 
-| Event | Fired when |
-|---|---|
-| `SubscriptionCreated` | A new subscription becomes active |
-| `SubscriptionCancelled` | Cancellation is scheduled or immediate |
-| `SubscriptionResumed` | A cancelled-at-period-end sub is un-cancelled |
-| `SubscriptionSwapped` | Plan changed mid-cycle |
-| `SubscriptionRenewed` | Billing cycle rolls over |
-| `SubscriptionPastDue` | Renewal charge fails |
-| `PaymentSucceeded` | Gateway or operator confirms payment |
-| `PaymentFailed` | Gateway rejects payment |
-| `PaymentRefunded` | Refund completed |
-| `UsageExceeded` | A usage check finds the limit has been hit |
+| Event                   | Fired when                                    |
+| ----------------------- | --------------------------------------------- |
+| `SubscriptionCreated`   | A new subscription becomes active             |
+| `SubscriptionCancelled` | Cancellation is scheduled or immediate        |
+| `SubscriptionResumed`   | A cancelled-at-period-end sub is un-cancelled |
+| `SubscriptionSwapped`   | Plan changed mid-cycle                        |
+| `SubscriptionRenewed`   | Billing cycle rolls over                      |
+| `SubscriptionPastDue`   | Renewal charge fails                          |
+| `PaymentSucceeded`      | Gateway or operator confirms payment          |
+| `PaymentFailed`         | Gateway rejects payment                       |
+| `PaymentRefunded`       | Refund completed                              |
+| `UsageExceeded`         | A usage check finds the limit has been hit    |
 
 ---
 
@@ -159,10 +159,10 @@ $this->app->alias(BillingManager::class, 'billing');
 
 The package uses polymorphic morph columns on every ownership table. Each table uses a semantically scoped morph name to keep relationships unambiguous:
 
-| Table | Morph columns | Relationship name |
-|---|---|---|
+| Table                   | Morph columns                                  | Relationship name  |
+| ----------------------- | ---------------------------------------------- | ------------------ |
 | `billing_subscriptions` | `subscriptionable_type`, `subscriptionable_id` | `subscriptionable` |
-| `billing_payments` | `subscriptionable_type`, `subscriptionable_id` | `subscriptionable` |
+| `billing_payments`      | `subscriptionable_type`, `subscriptionable_id` | `subscriptionable` |
 
 `subscriptionable_id` is stored as `varchar`. This means the column holds the string representation of the owner's primary key and supports integer IDs (stored as `"1"`), UUIDs, and ULIDs without schema changes. The morph class name (e.g. the output of `Model::getMorphClass()`) is stored in `subscriptionable_type`.
 
@@ -211,7 +211,36 @@ An entity must not hold more than one `active` or `trialing` subscription per na
 
 ---
 
-## PHP 8.4 / Laravel 12 usage
+## Route middleware
+
+Three middleware aliases are registered by the service provider. The aliases and their HTTP status codes are intentional and stable:
+
+| Alias | Class | HTTP status on deny | When denied |
+|---|---|---|---|
+| `billing.active` | `EnsureSubscriptionActive` | **402 Payment Required** | No subscription, expired, or past-due (PastDue) without an accessible status |
+| `billing.feature:{feature}` | `EnsureFeatureAvailable` | **402 Payment Required** | Feature not on the plan or explicitly disabled |
+| `billing.not_suspended` | `EnsureNotSuspended` | **403 Forbidden** | Subscription is `past_due` (payment failed; access actively blocked) |
+
+**402 vs 403 rationale**: 402 signals a payment or entitlement gap — the client should upgrade or pay. 403 signals an administrative block — payment may be up to date, but access has been suspended for another reason (e.g. fraud review, manual override). Using distinct codes lets the host application show the right error page without inspecting the response body.
+
+### Grace period
+
+`billing.active` allows access when the subscription status is `Cancelled` and `current_period_end` is still in the future (`onGracePeriod() === true`). Once `current_period_end` passes, access is denied with 402. A `Cancelled` subscription with an expired period is treated the same as any other inaccessible status.
+
+### Middleware alias registration and Testbench bootstrap order
+
+The service provider registers aliases in two places:
+
+1. **On the Router** (`$router->aliasMiddleware(...)`) — this is the primary path used by route dispatch.
+2. **On the HTTP Kernel** (via `$app->afterResolving(Kernel::class, ...)`) — ensures `terminateMiddleware()` can resolve the class names from kernel's own `$middlewareAliases` property.
+
+The `afterResolving` hook is necessary because Testbench's `resolveApplicationHttpMiddlewares()` (called inside `CreatesApplication::createApplication()`) resets the kernel's `$middlewareAliases` to framework defaults after all service providers have booted. Without the hook, applications bootstrapped via `Orchestra\Testbench\Foundation\Application::create()` outside the PHPUnit lifecycle (e.g. standalone scripts, custom artisan runners) would encounter `Target class [billing.active] does not exist` errors during the terminate phase.
+
+The package's own `TestCase` also overrides `resolveApplicationHttpMiddlewares()` and registers an additional `afterResolving` callback for belt-and-suspenders resilience in unusual test bootstrap configurations.
+
+---
+
+## PHP 8.4 / Laravel 12+ usage
 
 - `readonly` classes for value objects (`PendingTransaction`, `FeatureCheck`)
 - Constructor property promotion throughout
