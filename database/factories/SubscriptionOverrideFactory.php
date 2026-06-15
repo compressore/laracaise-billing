@@ -18,10 +18,10 @@ class SubscriptionOverrideFactory extends Factory
     {
         return [
             'subscription_id' => SubscriptionFactory::new(),
-            'feature'         => $this->faker->slug(2),
-            'value'           => (string) $this->faker->numberBetween(100, 10_000),
-            'reason'          => $this->faker->sentence(),
-            'expires_at'      => null,
+            'feature' => $this->faker->slug(2),
+            'value' => (string) $this->faker->numberBetween(100, 10_000),
+            'reason' => $this->faker->sentence(),
+            'expires_at' => null,
         ];
     }
 

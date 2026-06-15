@@ -16,26 +16,27 @@ use Laracaise\Billing\Enums\PaymentStatus;
 use Laracaise\Billing\Enums\PaymentType;
 
 /**
- * @property string                   $id
- * @property string                   $subscriptionable_type
- * @property string                   $subscriptionable_id
- * @property string|null              $subscription_id
- * @property int                      $amount
- * @property string                   $currency
- * @property PaymentStatus            $status
- * @property PaymentType              $type
- * @property string|null              $provider
- * @property string|null              $provider_reference
+ * @property string $id
+ * @property string $subscriptionable_type
+ * @property string $subscriptionable_id
+ * @property string|null $subscription_id
+ * @property int $amount
+ * @property string $currency
+ * @property PaymentStatus $status
+ * @property PaymentType $type
+ * @property string|null $provider
+ * @property string|null $provider_reference
  * @property array<string,mixed>|null $provider_response
  * @property array<string,mixed>|null $metadata
- * @property Carbon|null              $paid_at
- * @property Carbon|null              $created_at
- * @property Carbon|null              $updated_at
+ * @property Carbon|null $paid_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class Payment extends Model
 {
     /** @use HasFactory<PaymentFactory> */
     use HasFactory;
+
     use HasUlids;
 
     protected $table = 'billing_payments';
@@ -58,12 +59,12 @@ class Payment extends Model
     protected function casts(): array
     {
         return [
-            'amount'            => 'integer',
-            'status'            => PaymentStatus::class,
-            'type'              => PaymentType::class,
+            'amount' => 'integer',
+            'status' => PaymentStatus::class,
+            'type' => PaymentType::class,
             'provider_response' => 'array',
-            'metadata'          => 'array',
-            'paid_at'           => 'datetime',
+            'metadata' => 'array',
+            'paid_at' => 'datetime',
         ];
     }
 

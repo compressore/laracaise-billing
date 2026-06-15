@@ -24,24 +24,24 @@ class PaymentFactory extends Factory
         return [
             // Placeholder morphs — override with forOwner() when testing the relationship
             'subscriptionable_type' => 'owner',
-            'subscriptionable_id'   => str_pad('1', 26, '0', STR_PAD_LEFT),
-            'subscription_id'       => SubscriptionFactory::new(),
-            'amount'                => $this->faker->numberBetween(500, 50_000),
-            'currency'              => 'ZAR',
-            'status'                => PaymentStatus::Succeeded,
-            'type'                  => PaymentType::Charge,
-            'provider'              => null,
-            'provider_reference'    => null,
-            'provider_response'     => null,
-            'metadata'              => null,
-            'paid_at'               => now(),
+            'subscriptionable_id' => str_pad('1', 26, '0', STR_PAD_LEFT),
+            'subscription_id' => SubscriptionFactory::new(),
+            'amount' => $this->faker->numberBetween(500, 50_000),
+            'currency' => 'ZAR',
+            'status' => PaymentStatus::Succeeded,
+            'type' => PaymentType::Charge,
+            'provider' => null,
+            'provider_reference' => null,
+            'provider_response' => null,
+            'metadata' => null,
+            'paid_at' => now(),
         ];
     }
 
     public function pending(): static
     {
         return $this->state([
-            'status'  => PaymentStatus::Pending,
+            'status' => PaymentStatus::Pending,
             'paid_at' => null,
         ]);
     }
@@ -49,7 +49,7 @@ class PaymentFactory extends Factory
     public function succeeded(): static
     {
         return $this->state([
-            'status'  => PaymentStatus::Succeeded,
+            'status' => PaymentStatus::Succeeded,
             'paid_at' => now(),
         ]);
     }
@@ -57,7 +57,7 @@ class PaymentFactory extends Factory
     public function failed(): static
     {
         return $this->state([
-            'status'  => PaymentStatus::Failed,
+            'status' => PaymentStatus::Failed,
             'paid_at' => null,
         ]);
     }
@@ -65,7 +65,7 @@ class PaymentFactory extends Factory
     public function refund(): static
     {
         return $this->state([
-            'type'   => PaymentType::Refund,
+            'type' => PaymentType::Refund,
             'status' => PaymentStatus::Succeeded,
         ]);
     }
@@ -73,7 +73,7 @@ class PaymentFactory extends Factory
     public function withProvider(string $provider, ?string $reference = null): static
     {
         return $this->state([
-            'provider'           => $provider,
+            'provider' => $provider,
             'provider_reference' => $reference ?? $this->faker->uuid(),
         ]);
     }
@@ -82,7 +82,7 @@ class PaymentFactory extends Factory
     {
         return $this->state([
             'subscriptionable_type' => $owner->getMorphClass(),
-            'subscriptionable_id'   => (string) $owner->getKey(),
+            'subscriptionable_id' => (string) $owner->getKey(),
         ]);
     }
 }

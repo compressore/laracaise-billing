@@ -6,18 +6,18 @@ namespace Laracaise\Billing\Enums;
 
 enum BillingInterval: string
 {
-    case Weekly  = 'weekly';
+    case Weekly = 'weekly';
     case Monthly = 'monthly';
-    case Yearly  = 'yearly';
-    case Once    = 'once';
+    case Yearly = 'yearly';
+    case Once = 'once';
 
     public function label(): string
     {
         return match ($this) {
-            self::Weekly  => 'Weekly',
+            self::Weekly => 'Weekly',
             self::Monthly => 'Monthly',
-            self::Yearly  => 'Yearly',
-            self::Once    => 'One-time',
+            self::Yearly => 'Yearly',
+            self::Once => 'One-time',
         };
     }
 

@@ -17,9 +17,9 @@ class PlanFeatureFactory extends Factory
     public function definition(): array
     {
         return [
-            'plan_id'    => PlanFactory::new(),
-            'feature'    => $this->faker->unique()->slug(2),
-            'value'      => (string) $this->faker->numberBetween(10, 10_000),
+            'plan_id' => PlanFactory::new(),
+            'feature' => $this->faker->unique()->slug(2),
+            'value' => (string) $this->faker->numberBetween(10, 10_000),
             'resettable' => true,
         ];
     }
@@ -32,7 +32,7 @@ class PlanFeatureFactory extends Factory
     public function flag(bool $enabled = true): static
     {
         return $this->state([
-            'value'      => $enabled ? 'true' : 'false',
+            'value' => $enabled ? 'true' : 'false',
             'resettable' => false,
         ]);
     }

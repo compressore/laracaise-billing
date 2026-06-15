@@ -44,7 +44,7 @@ it('does not have an updated_at property', function () {
 });
 
 it('belongs to a subscription', function () {
-    $sub    = Subscription::factory()->create();
+    $sub = Subscription::factory()->create();
     $record = UsageRecord::factory()->create(['subscription_id' => $sub->id]);
 
     expect($record->subscription->id)->toBe($sub->id);
@@ -74,7 +74,7 @@ it('forFeature scope filters by feature key', function () {
 
 it('inPeriod scope returns records within the date range', function () {
     $start = now()->subDays(30);
-    $end   = now()->subDays(10);
+    $end = now()->subDays(10);
 
     UsageRecord::factory()->recordedAt(now()->subDays(20))->create(); // in range
     UsageRecord::factory()->recordedAt(now()->subDays(5))->create();  // out of range
@@ -83,9 +83,9 @@ it('inPeriod scope returns records within the date range', function () {
 });
 
 it('can sum usage for a feature in a period', function () {
-    $sub   = Subscription::factory()->create();
+    $sub = Subscription::factory()->create();
     $start = now()->startOfMonth();
-    $end   = now()->endOfMonth();
+    $end = now()->endOfMonth();
 
     UsageRecord::factory()->create(['subscription_id' => $sub->id, 'feature' => 'api_calls', 'quantity' => 100, 'recorded_at' => now()]);
     UsageRecord::factory()->create(['subscription_id' => $sub->id, 'feature' => 'api_calls', 'quantity' => 50, 'recorded_at' => now()]);

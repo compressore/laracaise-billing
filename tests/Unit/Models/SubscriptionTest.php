@@ -33,14 +33,14 @@ it('casts status to SubscriptionStatus enum', function () {
 
 it('belongs to a plan', function () {
     $plan = Plan::factory()->create();
-    $sub  = Subscription::factory()->create(['plan_id' => $plan->id]);
+    $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
 
     expect($sub->plan->id)->toBe($plan->id);
 });
 
 it('morphs to the subscriptionable owner', function () {
     $owner = BillableModel::create(['name' => 'Acme']);
-    $sub   = Subscription::factory()->forOwner($owner)->create();
+    $sub = Subscription::factory()->forOwner($owner)->create();
 
     expect($sub->subscriptionable->id)->toBe($owner->id);
 });

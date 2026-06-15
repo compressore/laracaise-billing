@@ -14,10 +14,10 @@ beforeEach(function () {
     $this->service = app(UsageService::class);
 
     $this->plan = Plan::factory()->create();
-    $this->sub  = Subscription::factory()->create([
-        'plan_id'              => $this->plan->id,
+    $this->sub = Subscription::factory()->create([
+        'plan_id' => $this->plan->id,
         'current_period_start' => now()->startOfMonth(),
-        'current_period_end'   => now()->endOfMonth(),
+        'current_period_end' => now()->endOfMonth(),
     ]);
 });
 
@@ -28,9 +28,9 @@ beforeEach(function () {
 function addUsageFeature(Plan $plan, string $feature, ?string $value, bool $resettable = true): PlanFeature
 {
     return PlanFeature::factory()->create([
-        'plan_id'    => $plan->id,
-        'feature'    => $feature,
-        'value'      => $value,
+        'plan_id' => $plan->id,
+        'feature' => $feature,
+        'value' => $value,
         'resettable' => $resettable,
     ]);
 }

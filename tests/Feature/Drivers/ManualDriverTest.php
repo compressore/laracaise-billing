@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Event;
 use Laracaise\Billing\Drivers\ManualDriver;
 use Laracaise\Billing\Enums\BillingInterval;
@@ -29,7 +30,7 @@ use Laracaise\Billing\Tests\Fixtures\BillableModel;
 
 function driver(): ManualDriver
 {
-    return new ManualDriver();
+    return new ManualDriver;
 }
 
 function billable(): BillableModel
@@ -40,51 +41,51 @@ function billable(): BillableModel
 function monthlyPlan(): Plan
 {
     return Plan::factory()->create([
-        'interval'       => BillingInterval::Monthly,
+        'interval' => BillingInterval::Monthly,
         'interval_count' => 1,
-        'trial_days'     => 0,
-        'currency'       => 'ZAR',
+        'trial_days' => 0,
+        'currency' => 'ZAR',
     ]);
 }
 
 function weeklyPlan(): Plan
 {
     return Plan::factory()->create([
-        'interval'       => BillingInterval::Weekly,
+        'interval' => BillingInterval::Weekly,
         'interval_count' => 1,
-        'trial_days'     => 0,
-        'currency'       => 'ZAR',
+        'trial_days' => 0,
+        'currency' => 'ZAR',
     ]);
 }
 
 function yearlyPlan(): Plan
 {
     return Plan::factory()->create([
-        'interval'       => BillingInterval::Yearly,
+        'interval' => BillingInterval::Yearly,
         'interval_count' => 1,
-        'trial_days'     => 0,
-        'currency'       => 'ZAR',
+        'trial_days' => 0,
+        'currency' => 'ZAR',
     ]);
 }
 
 function oncePlan(): Plan
 {
     return Plan::factory()->create([
-        'interval'       => BillingInterval::Once,
+        'interval' => BillingInterval::Once,
         'interval_count' => 1,
-        'trial_days'     => 0,
-        'currency'       => 'ZAR',
+        'trial_days' => 0,
+        'currency' => 'ZAR',
     ]);
 }
 
 function activeSubscription(BillableModel $owner, Plan $plan): Subscription
 {
     return Subscription::factory()->forOwner($owner)->create([
-        'plan_id'              => $plan->id,
-        'status'               => SubscriptionStatus::Active,
-        'provider'             => 'manual',
+        'plan_id' => $plan->id,
+        'status' => SubscriptionStatus::Active,
+        'provider' => 'manual',
         'current_period_start' => now()->startOfMonth(),
-        'current_period_end'   => now()->endOfMonth(),
+        'current_period_end' => now()->endOfMonth(),
     ]);
 }
 
@@ -104,7 +105,7 @@ it('createSubscription creates a Pending subscription linked to the billable', f
     Event::fake();
 
     $owner = billable();
-    $plan  = monthlyPlan();
+    $plan = monthlyPlan();
 
     $sub = driver()->createSubscription($owner, $plan);
 
@@ -123,7 +124,7 @@ it('createSubscription accepts a custom subscription name', function () {
     Event::fake();
 
     $owner = billable();
-    $sub   = driver()->createSubscription($owner, monthlyPlan(), 'addon');
+    $sub = driver()->createSubscription($owner, monthlyPlan(), 'addon');
 
     expect($sub->name)->toBe('addon');
 });
@@ -132,7 +133,7 @@ it('createSubscription accepts a custom quantity', function () {
     Event::fake();
 
     $owner = billable();
-    $sub   = driver()->createSubscription($owner, monthlyPlan(), 'default', ['quantity' => 5]);
+    $sub = driver()->createSubscription($owner, monthlyPlan(), 'default', ['quantity' => 5]);
 
     expect($sub->quantity)->toBe(5);
 });
@@ -141,7 +142,7 @@ it('createSubscription creates Trialing when the plan has trial_days', function 
     Event::fake();
 
     $plan = Plan::factory()->create(['trial_days' => 14, 'interval' => BillingInterval::Monthly]);
-    $sub  = driver()->createSubscription(billable(), $plan);
+    $sub = driver()->createSubscription(billable(), $plan);
 
     expect($sub->status)->toBe(SubscriptionStatus::Trialing)
         ->and($sub->trial_ends_at)->not->toBeNull()
@@ -152,7 +153,7 @@ it('createSubscription respects trial_days override of 0 (no trial)', function (
     Event::fake();
 
     $plan = Plan::factory()->create(['trial_days' => 14, 'interval' => BillingInterval::Monthly]);
-    $sub  = driver()->createSubscription(billable(), $plan, 'default', ['trial_days' => 0]);
+    $sub = driver()->createSubscription(billable(), $plan, 'default', ['trial_days' => 0]);
 
     expect($sub->status)->toBe(SubscriptionStatus::Pending)
         ->and($sub->trial_ends_at)->toBeNull();
@@ -184,7 +185,7 @@ it('activateSubscription transitions Pending to Active', function () {
     Event::fake();
 
     $owner = billable();
-    $sub   = driver()->createSubscription($owner, monthlyPlan());
+    $sub = driver()->createSubscription($owner, monthlyPlan());
 
     driver()->activateSubscription($sub);
 
@@ -198,7 +199,7 @@ it('activateSubscription transitions Trialing to Active and clears trial_ends_at
     Event::fake();
 
     $plan = Plan::factory()->create(['trial_days' => 7, 'interval' => BillingInterval::Monthly]);
-    $sub  = driver()->createSubscription(billable(), $plan);
+    $sub = driver()->createSubscription(billable(), $plan);
 
     expect($sub->status)->toBe(SubscriptionStatus::Trialing);
 
@@ -222,7 +223,7 @@ it('activateSubscription accepts a custom activation date', function () {
     Event::fake();
 
     $activatedAt = now()->subDays(5);
-    $sub         = driver()->createSubscription(billable(), monthlyPlan());
+    $sub = driver()->createSubscription(billable(), monthlyPlan());
 
     driver()->activateSubscription($sub, $activatedAt);
 
@@ -233,7 +234,7 @@ it('activateSubscription throws when subscription is already Active', function (
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
 
     driver()->activateSubscription($sub);
 })->throws(InvalidTransitionException::class);
@@ -265,7 +266,7 @@ it('renewSubscription advances the billing period for a monthly plan', function 
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
     $oldEnd = $sub->current_period_end->copy();
 
     driver()->renewSubscription($sub);
@@ -279,7 +280,7 @@ it('renewSubscription advances the billing period for a weekly plan', function (
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, weeklyPlan());
+    $sub = activeSubscription($owner, weeklyPlan());
     $oldEnd = $sub->current_period_end->copy();
 
     driver()->renewSubscription($sub);
@@ -293,7 +294,7 @@ it('renewSubscription advances the billing period for a yearly plan', function (
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, yearlyPlan());
+    $sub = activeSubscription($owner, yearlyPlan());
     $oldEnd = $sub->current_period_end->copy();
 
     driver()->renewSubscription($sub);
@@ -306,7 +307,7 @@ it('renewSubscription advances the billing period for a yearly plan', function (
 it('renewSubscription accepts an explicit period start date', function () {
     Event::fake();
 
-    $sub   = activeSubscription(billable(), monthlyPlan());
+    $sub = activeSubscription(billable(), monthlyPlan());
     $start = now()->addDays(3);
 
     driver()->renewSubscription($sub, $start);
@@ -318,10 +319,10 @@ it('renewSubscription transitions PastDue back to Active', function () {
     Event::fake();
 
     $plan = monthlyPlan();
-    $sub  = Subscription::factory()->forOwner(billable())->pastDue()->create([
-        'plan_id'              => $plan->id,
-        'provider'             => 'manual',
-        'current_period_end'   => now()->endOfMonth(),
+    $sub = Subscription::factory()->forOwner(billable())->pastDue()->create([
+        'plan_id' => $plan->id,
+        'provider' => 'manual',
+        'current_period_end' => now()->endOfMonth(),
     ]);
 
     driver()->renewSubscription($sub);
@@ -364,7 +365,7 @@ it('extendSubscription adds the given days to current_period_end', function () {
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
     $oldEnd = $sub->current_period_end->copy();
 
     driver()->extendSubscription($sub, 14);
@@ -376,8 +377,8 @@ it('extendSubscription works on a PastDue subscription', function () {
     Event::fake();
 
     $plan = monthlyPlan();
-    $sub  = Subscription::factory()->forOwner(billable())->pastDue()->create([
-        'plan_id'            => $plan->id,
+    $sub = Subscription::factory()->forOwner(billable())->pastDue()->create([
+        'plan_id' => $plan->id,
         'current_period_end' => now()->addDays(5),
     ]);
 
@@ -433,7 +434,7 @@ it('suspendSubscription throws when subscription is already PastDue', function (
     Event::fake();
 
     $plan = monthlyPlan();
-    $sub  = Subscription::factory()->forOwner(billable())->pastDue()->create([
+    $sub = Subscription::factory()->forOwner(billable())->pastDue()->create([
         'plan_id' => $plan->id,
     ]);
 
@@ -467,7 +468,7 @@ it('resumeSubscription transitions PastDue to Active', function () {
     Event::fake();
 
     $plan = monthlyPlan();
-    $sub  = Subscription::factory()->forOwner(billable())->pastDue()->create([
+    $sub = Subscription::factory()->forOwner(billable())->pastDue()->create([
         'plan_id' => $plan->id,
     ]);
 
@@ -498,7 +499,7 @@ it('resumeSubscription fires SubscriptionResumed', function () {
     Event::fake();
 
     $plan = monthlyPlan();
-    $sub  = Subscription::factory()->forOwner(billable())->pastDue()->create([
+    $sub = Subscription::factory()->forOwner(billable())->pastDue()->create([
         'plan_id' => $plan->id,
     ]);
 
@@ -525,7 +526,7 @@ it('cancelSubscription sets status to Cancelled and records cancelled_at', funct
 it('cancelSubscription preserves current_period_end for grace-period access by default', function () {
     Event::fake();
 
-    $sub    = activeSubscription(billable(), monthlyPlan());
+    $sub = activeSubscription(billable(), monthlyPlan());
     $oldEnd = $sub->current_period_end->copy();
 
     driver()->cancelSubscription($sub);
@@ -547,7 +548,7 @@ it('cancelSubscription can cancel from PastDue', function () {
     Event::fake();
 
     $plan = monthlyPlan();
-    $sub  = Subscription::factory()->forOwner(billable())->pastDue()->create([
+    $sub = Subscription::factory()->forOwner(billable())->pastDue()->create([
         'plan_id' => $plan->id,
     ]);
 
@@ -597,7 +598,7 @@ it('expireSubscription can expire a PastDue subscription', function () {
     Event::fake();
 
     $plan = monthlyPlan();
-    $sub  = Subscription::factory()->forOwner(billable())->pastDue()->create([
+    $sub = Subscription::factory()->forOwner(billable())->pastDue()->create([
         'plan_id' => $plan->id,
     ]);
 
@@ -623,7 +624,7 @@ it('recordPayment creates a Succeeded Payment with provider manual', function ()
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
 
     $payment = driver()->recordPayment($sub, 9900, 'REF-001');
 
@@ -640,9 +641,9 @@ it('recordPayment creates a Succeeded Payment with provider manual', function ()
 it('recordPayment uses the plan currency by default', function () {
     Event::fake();
 
-    $plan  = Plan::factory()->create(['currency' => 'NGN', 'interval' => BillingInterval::Monthly]);
+    $plan = Plan::factory()->create(['currency' => 'NGN', 'interval' => BillingInterval::Monthly]);
     $owner = billable();
-    $sub   = activeSubscription($owner, $plan);
+    $sub = activeSubscription($owner, $plan);
 
     $payment = driver()->recordPayment($sub, 5000, 'REF-002');
 
@@ -652,7 +653,7 @@ it('recordPayment uses the plan currency by default', function () {
 it('recordPayment accepts a currency override', function () {
     Event::fake();
 
-    $sub     = activeSubscription(billable(), monthlyPlan());
+    $sub = activeSubscription(billable(), monthlyPlan());
     $payment = driver()->recordPayment($sub, 5000, 'REF-003', ['currency' => 'USD']);
 
     expect($payment->currency)->toBe('USD');
@@ -661,7 +662,7 @@ it('recordPayment accepts a currency override', function () {
 it('recordPayment stores optional metadata', function () {
     Event::fake();
 
-    $sub     = activeSubscription(billable(), monthlyPlan());
+    $sub = activeSubscription(billable(), monthlyPlan());
     $payment = driver()->recordPayment($sub, 5000, 'REF-004', [
         'metadata' => ['notes' => 'Cash received at front desk'],
     ]);
@@ -672,7 +673,7 @@ it('recordPayment stores optional metadata', function () {
 it('recordPayment fires ManualPaymentRecorded', function () {
     Event::fake();
 
-    $sub     = activeSubscription(billable(), monthlyPlan());
+    $sub = activeSubscription(billable(), monthlyPlan());
     $payment = driver()->recordPayment($sub, 9900, 'REF-005');
 
     Event::assertDispatched(
@@ -689,15 +690,15 @@ it('charge sets payment status to Pending with provider manual', function () {
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
 
     $payment = Payment::factory()->forOwner($owner)->create([
         'subscription_id' => $sub->id,
-        'amount'          => 9900,
-        'currency'        => 'ZAR',
-        'status'          => PaymentStatus::Pending,
-        'type'            => PaymentType::Charge,
-        'provider'        => null,
+        'amount' => 9900,
+        'currency' => 'ZAR',
+        'status' => PaymentStatus::Pending,
+        'type' => PaymentType::Charge,
+        'provider' => null,
     ]);
 
     $result = driver()->charge($payment);
@@ -714,14 +715,14 @@ it('verifyTransaction marks a pending payment as Succeeded', function () {
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
 
     $payment = Payment::factory()->forOwner($owner)->create([
-        'subscription_id'    => $sub->id,
-        'provider'           => 'manual',
+        'subscription_id' => $sub->id,
+        'provider' => 'manual',
         'provider_reference' => 'TXN-999',
-        'status'             => PaymentStatus::Pending,
-        'type'               => PaymentType::Charge,
+        'status' => PaymentStatus::Pending,
+        'type' => PaymentType::Charge,
     ]);
 
     $result = driver()->verifyTransaction('TXN-999');
@@ -735,14 +736,14 @@ it('verifyTransaction fires ManualPaymentRecorded when subscription is linked', 
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
 
     Payment::factory()->forOwner($owner)->create([
-        'subscription_id'    => $sub->id,
-        'provider'           => 'manual',
+        'subscription_id' => $sub->id,
+        'provider' => 'manual',
         'provider_reference' => 'TXN-888',
-        'status'             => PaymentStatus::Pending,
-        'type'               => PaymentType::Charge,
+        'status' => PaymentStatus::Pending,
+        'type' => PaymentType::Charge,
     ]);
 
     driver()->verifyTransaction('TXN-888');
@@ -755,19 +756,19 @@ it('verifyTransaction fires ManualPaymentRecorded when subscription is linked', 
 
 it('verifyTransaction throws when the reference does not exist', function () {
     driver()->verifyTransaction('NONEXISTENT');
-})->throws(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+})->throws(ModelNotFoundException::class);
 
 // ---------------------------------------------------------------------------
 // initializeTransaction()
 // ---------------------------------------------------------------------------
 
 it('initializeTransaction throws BadMethodCallException', function () {
-    $owner   = billable();
-    $sub     = activeSubscription($owner, monthlyPlan());
+    $owner = billable();
+    $sub = activeSubscription($owner, monthlyPlan());
     $payment = Payment::factory()->forOwner($owner)->create([
         'subscription_id' => $sub->id,
-        'status'          => PaymentStatus::Pending,
-        'type'            => PaymentType::Charge,
+        'status' => PaymentStatus::Pending,
+        'type' => PaymentType::Charge,
     ]);
 
     driver()->initializeTransaction($payment);
@@ -791,16 +792,16 @@ it('refund creates a Refund Payment record for the full amount', function () {
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
 
     $original = Payment::factory()->forOwner($owner)->create([
-        'subscription_id'    => $sub->id,
-        'provider'           => 'manual',
+        'subscription_id' => $sub->id,
+        'provider' => 'manual',
         'provider_reference' => 'TXN-100',
-        'amount'             => 10000,
-        'currency'           => 'ZAR',
-        'status'             => PaymentStatus::Succeeded,
-        'type'               => PaymentType::Charge,
+        'amount' => 10000,
+        'currency' => 'ZAR',
+        'status' => PaymentStatus::Succeeded,
+        'type' => PaymentType::Charge,
     ]);
 
     $refund = driver()->refund($original);
@@ -816,15 +817,15 @@ it('refund creates a partial refund when an amount is provided', function () {
     Event::fake();
 
     $owner = billable();
-    $sub   = activeSubscription($owner, monthlyPlan());
+    $sub = activeSubscription($owner, monthlyPlan());
 
     $original = Payment::factory()->forOwner($owner)->create([
         'subscription_id' => $sub->id,
-        'provider'        => 'manual',
-        'amount'          => 10000,
-        'currency'        => 'ZAR',
-        'status'          => PaymentStatus::Succeeded,
-        'type'            => PaymentType::Charge,
+        'provider' => 'manual',
+        'amount' => 10000,
+        'currency' => 'ZAR',
+        'status' => PaymentStatus::Succeeded,
+        'type' => PaymentType::Charge,
     ]);
 
     $refund = driver()->refund($original, 3000);

@@ -18,14 +18,14 @@ beforeEach(function () {
 // ---------------------------------------------------------------------------
 
 it('returns null when the subscription has no plan', function () {
-    $sub = Subscription::factory()->create(['plan_id' => null]);
+    $sub = new Subscription;
 
     expect($this->service->resolve($sub, 'reports'))->toBeNull();
-})->skip('plan_id is required by the factory default; adjust when nullable plan is supported');
+});
 
 it('returns null when the feature does not exist on the plan', function () {
     $plan = Plan::factory()->create();
-    $sub  = Subscription::factory()->create(['plan_id' => $plan->id]);
+    $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
 
     expect($this->service->resolve($sub, 'nonexistent'))->toBeNull();
 });
@@ -33,9 +33,9 @@ it('returns null when the feature does not exist on the plan', function () {
 it('returns a FeatureValue from the plan when no override exists', function () {
     $plan = Plan::factory()->create();
     PlanFeature::factory()->create([
-        'plan_id'    => $plan->id,
-        'feature'    => 'api_calls',
-        'value'      => '1000',
+        'plan_id' => $plan->id,
+        'feature' => 'api_calls',
+        'value' => '1000',
         'resettable' => true,
     ]);
     $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
@@ -52,12 +52,12 @@ it('returns a FeatureValue from the plan when no override exists', function () {
 it('returns a FeatureValue with flag value true', function () {
     $plan = Plan::factory()->create();
     PlanFeature::factory()->create([
-        'plan_id'    => $plan->id,
-        'feature'    => 'custom_domain',
-        'value'      => 'true',
+        'plan_id' => $plan->id,
+        'feature' => 'custom_domain',
+        'value' => 'true',
         'resettable' => false,
     ]);
-    $sub      = Subscription::factory()->create(['plan_id' => $plan->id]);
+    $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
     $resolved = $this->service->resolve($sub, 'custom_domain');
 
     expect($resolved->isFlag())->toBeTrue()
@@ -67,12 +67,12 @@ it('returns a FeatureValue with flag value true', function () {
 it('returns a FeatureValue with flag value false', function () {
     $plan = Plan::factory()->create();
     PlanFeature::factory()->create([
-        'plan_id'    => $plan->id,
-        'feature'    => 'white_label',
-        'value'      => 'false',
+        'plan_id' => $plan->id,
+        'feature' => 'white_label',
+        'value' => 'false',
         'resettable' => false,
     ]);
-    $sub      = Subscription::factory()->create(['plan_id' => $plan->id]);
+    $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
     $resolved = $this->service->resolve($sub, 'white_label');
 
     expect($resolved->isFlag())->toBeTrue()
@@ -84,9 +84,9 @@ it('returns a FeatureValue with null value for an unlimited feature', function (
     PlanFeature::factory()->create([
         'plan_id' => $plan->id,
         'feature' => 'storage',
-        'value'   => null,
+        'value' => null,
     ]);
-    $sub      = Subscription::factory()->create(['plan_id' => $plan->id]);
+    $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
     $resolved = $this->service->resolve($sub, 'storage');
 
     expect($resolved->isUnlimited())->toBeTrue()
@@ -96,17 +96,17 @@ it('returns a FeatureValue with null value for an unlimited feature', function (
 it('uses an active override value instead of the plan value', function () {
     $plan = Plan::factory()->create();
     PlanFeature::factory()->create([
-        'plan_id'    => $plan->id,
-        'feature'    => 'api_calls',
-        'value'      => '1000',
+        'plan_id' => $plan->id,
+        'feature' => 'api_calls',
+        'value' => '1000',
         'resettable' => true,
     ]);
     $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
     SubscriptionOverride::factory()->create([
         'subscription_id' => $sub->id,
-        'feature'         => 'api_calls',
-        'value'           => '5000',
-        'expires_at'      => now()->addMonth(),
+        'feature' => 'api_calls',
+        'value' => '5000',
+        'expires_at' => now()->addMonth(),
     ]);
 
     $resolved = $this->service->resolve($sub, 'api_calls');
@@ -121,14 +121,14 @@ it('ignores an expired override and falls back to the plan value', function () {
     PlanFeature::factory()->create([
         'plan_id' => $plan->id,
         'feature' => 'api_calls',
-        'value'   => '1000',
+        'value' => '1000',
     ]);
     $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
     SubscriptionOverride::factory()->create([
         'subscription_id' => $sub->id,
-        'feature'         => 'api_calls',
-        'value'           => '5000',
-        'expires_at'      => now()->subDay(),
+        'feature' => 'api_calls',
+        'value' => '5000',
+        'expires_at' => now()->subDay(),
     ]);
 
     $resolved = $this->service->resolve($sub, 'api_calls');
@@ -140,17 +140,17 @@ it('ignores an expired override and falls back to the plan value', function () {
 it('always takes resettable from the plan, even when an override is active', function () {
     $plan = Plan::factory()->create();
     PlanFeature::factory()->create([
-        'plan_id'    => $plan->id,
-        'feature'    => 'api_calls',
-        'value'      => '1000',
+        'plan_id' => $plan->id,
+        'feature' => 'api_calls',
+        'value' => '1000',
         'resettable' => true,
     ]);
     $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
     SubscriptionOverride::factory()->create([
         'subscription_id' => $sub->id,
-        'feature'         => 'api_calls',
-        'value'           => '9999',
-        'expires_at'      => now()->addMonth(),
+        'feature' => 'api_calls',
+        'value' => '9999',
+        'expires_at' => now()->addMonth(),
     ]);
 
     $resolved = $this->service->resolve($sub, 'api_calls');
@@ -163,10 +163,10 @@ it('always takes resettable from the plan, even when an override is active', fun
 // ---------------------------------------------------------------------------
 
 it('returns an empty array when the subscription has no plan', function () {
-    $sub = Subscription::factory()->create(['plan_id' => null]);
+    $sub = new Subscription;
 
     expect($this->service->allResettable($sub))->toBeEmpty();
-})->skip('plan_id is required by factory default');
+});
 
 it('returns only resettable features', function () {
     $plan = Plan::factory()->create();
@@ -174,7 +174,7 @@ it('returns only resettable features', function () {
     PlanFeature::factory()->create(['plan_id' => $plan->id, 'feature' => 'storage', 'value' => null, 'resettable' => false]);
     PlanFeature::factory()->create(['plan_id' => $plan->id, 'feature' => 'exports', 'value' => '10', 'resettable' => true]);
 
-    $sub    = Subscription::factory()->create(['plan_id' => $plan->id]);
+    $sub = Subscription::factory()->create(['plan_id' => $plan->id]);
     $result = $this->service->allResettable($sub);
 
     expect($result)->toHaveCount(2);

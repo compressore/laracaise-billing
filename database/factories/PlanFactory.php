@@ -18,17 +18,17 @@ class PlanFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'           => ucwords($this->faker->unique()->words(2, true)),
-            'slug'           => $this->faker->unique()->slug(2),
-            'description'    => $this->faker->sentence(),
-            'amount'         => $this->faker->numberBetween(500, 50_000),
-            'currency'       => 'ZAR',
-            'interval'       => BillingInterval::Monthly,
+            'name' => ucwords($this->faker->unique()->words(2, true)),
+            'slug' => $this->faker->unique()->slug(2),
+            'description' => $this->faker->sentence(),
+            'amount' => $this->faker->numberBetween(500, 50_000),
+            'currency' => 'ZAR',
+            'interval' => BillingInterval::Monthly,
             'interval_count' => 1,
-            'trial_days'     => 0,
-            'is_active'      => true,
-            'sort_order'     => 0,
-            'metadata'       => null,
+            'trial_days' => 0,
+            'is_active' => true,
+            'sort_order' => 0,
+            'metadata' => null,
         ];
     }
 

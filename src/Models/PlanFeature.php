@@ -13,11 +13,11 @@ use Illuminate\Support\Carbon;
 use Laracaise\Billing\Database\Factories\PlanFeatureFactory;
 
 /**
- * @property string      $id
- * @property string      $plan_id
- * @property string      $feature
+ * @property string $id
+ * @property string $plan_id
+ * @property string $feature
  * @property string|null $value
- * @property bool        $resettable
+ * @property bool $resettable
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -25,6 +25,7 @@ class PlanFeature extends Model
 {
     /** @use HasFactory<PlanFeatureFactory> */
     use HasFactory;
+
     use HasUlids;
 
     protected $table = 'billing_plan_features';

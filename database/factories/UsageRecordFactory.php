@@ -19,9 +19,9 @@ class UsageRecordFactory extends Factory
     {
         return [
             'subscription_id' => SubscriptionFactory::new(),
-            'feature'         => $this->faker->slug(2),
-            'quantity'        => $this->faker->numberBetween(1, 100),
-            'recorded_at'     => now(),
+            'feature' => $this->faker->slug(2),
+            'quantity' => $this->faker->numberBetween(1, 100),
+            'recorded_at' => now(),
         ];
     }
 

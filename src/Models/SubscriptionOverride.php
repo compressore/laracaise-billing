@@ -13,9 +13,9 @@ use Illuminate\Support\Carbon;
 use Laracaise\Billing\Database\Factories\SubscriptionOverrideFactory;
 
 /**
- * @property string      $id
- * @property string      $subscription_id
- * @property string      $feature
+ * @property string $id
+ * @property string $subscription_id
+ * @property string $feature
  * @property string|null $value
  * @property string|null $reason
  * @property Carbon|null $expires_at
@@ -26,6 +26,7 @@ class SubscriptionOverride extends Model
 {
     /** @use HasFactory<SubscriptionOverrideFactory> */
     use HasFactory;
+
     use HasUlids;
 
     protected $table = 'billing_subscription_overrides';

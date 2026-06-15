@@ -6,22 +6,22 @@ namespace Laracaise\Billing\Enums;
 
 enum SubscriptionStatus: string
 {
-    case Pending   = 'pending';
-    case Trialing  = 'trialing';
-    case Active    = 'active';
-    case PastDue   = 'past_due';
+    case Pending = 'pending';
+    case Trialing = 'trialing';
+    case Active = 'active';
+    case PastDue = 'past_due';
     case Cancelled = 'cancelled';
-    case Expired   = 'expired';
+    case Expired = 'expired';
 
     public function label(): string
     {
         return match ($this) {
-            self::Pending   => 'Pending',
-            self::Trialing  => 'Trialing',
-            self::Active    => 'Active',
-            self::PastDue   => 'Past Due',
+            self::Pending => 'Pending',
+            self::Trialing => 'Trialing',
+            self::Active => 'Active',
+            self::PastDue => 'Past Due',
             self::Cancelled => 'Cancelled',
-            self::Expired   => 'Expired',
+            self::Expired => 'Expired',
         };
     }
 
@@ -29,7 +29,7 @@ enum SubscriptionStatus: string
     {
         return match ($this) {
             self::Active, self::Trialing => true,
-            default                      => false,
+            default => false,
         };
     }
 }

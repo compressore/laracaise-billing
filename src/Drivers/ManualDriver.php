@@ -48,13 +48,13 @@ final class ManualDriver implements PaymentDriverInterface
      * Record a pending charge for offline collection.
      * The operator confirms receipt via verifyTransaction() or recordPayment().
      *
-     * @param array<string,mixed> $options
+     * @param  array<string,mixed>  $options
      */
     public function charge(Payment $payment, array $options = []): Payment
     {
         $payment->update([
             'provider' => 'manual',
-            'status'   => PaymentStatus::Pending,
+            'status' => PaymentStatus::Pending,
         ]);
 
         return $payment;
@@ -63,7 +63,8 @@ final class ManualDriver implements PaymentDriverInterface
     /**
      * Not supported by the manual driver — manual billing has no checkout URL.
      *
-     * @param  array<string,mixed> $options
+     * @param  array<string,mixed>  $options
+     *
      * @throws BadMethodCallException
      */
     public function initializeTransaction(Payment $payment, array $options = []): PendingTransaction
@@ -87,7 +88,7 @@ final class ManualDriver implements PaymentDriverInterface
             ->firstOrFail();
 
         $payment->update([
-            'status'  => PaymentStatus::Succeeded,
+            'status' => PaymentStatus::Succeeded,
             'paid_at' => now(),
         ]);
 
@@ -108,16 +109,16 @@ final class ManualDriver implements PaymentDriverInterface
     {
         return Payment::create([
             'subscriptionable_type' => $payment->subscriptionable_type,
-            'subscriptionable_id'   => $payment->subscriptionable_id,
-            'subscription_id'       => $payment->subscription_id,
-            'amount'                => $amountInCents ?? $payment->amount,
-            'currency'              => $payment->currency,
-            'status'                => PaymentStatus::Succeeded,
-            'type'                  => PaymentType::Refund,
-            'provider'              => 'manual',
-            'provider_reference'    => null,
-            'paid_at'               => now(),
-            'metadata'              => ['refunded_payment_id' => $payment->id],
+            'subscriptionable_id' => $payment->subscriptionable_id,
+            'subscription_id' => $payment->subscription_id,
+            'amount' => $amountInCents ?? $payment->amount,
+            'currency' => $payment->currency,
+            'status' => PaymentStatus::Succeeded,
+            'type' => PaymentType::Refund,
+            'provider' => 'manual',
+            'provider_reference' => null,
+            'paid_at' => now(),
+            'metadata' => ['refunded_payment_id' => $payment->id],
         ]);
     }
 
@@ -125,7 +126,7 @@ final class ManualDriver implements PaymentDriverInterface
      * No-op for the manual driver — no remote customer record is needed.
      * Returns the billable model's primary key as a string.
      *
-     * @param array<string,mixed> $data
+     * @param  array<string,mixed>  $data
      */
     public function createCustomer(Model $billable, array $data = []): string
     {
@@ -144,7 +145,7 @@ final class ManualDriver implements PaymentDriverInterface
      *   'trial_days' int   Override the plan's trial_days (0 = no trial)
      *   'metadata'   array Arbitrary key/value stored on the subscription
      *
-     * @param array{quantity?: int, trial_days?: int, metadata?: array<string,mixed>} $options
+     * @param  array{quantity?: int, trial_days?: int, metadata?: array<string,mixed>}  $options
      */
     public function createSubscription(
         Model $billable,
@@ -152,8 +153,8 @@ final class ManualDriver implements PaymentDriverInterface
         string $name = 'default',
         array $options = [],
     ): Subscription {
-        $quantity   = (int) ($options['quantity'] ?? 1);
-        $trialDays  = array_key_exists('trial_days', $options)
+        $quantity = (int) ($options['quantity'] ?? 1);
+        $trialDays = array_key_exists('trial_days', $options)
             ? (int) $options['trial_days']
             : $plan->trial_days;
 
@@ -161,16 +162,16 @@ final class ManualDriver implements PaymentDriverInterface
 
         $subscription = Subscription::create([
             'subscriptionable_type' => $billable->getMorphClass(),
-            'subscriptionable_id'   => $this->keyToString($billable->getKey()),
-            'plan_id'               => $plan->id,
-            'name'                  => $name,
-            'status'                => $trialing ? SubscriptionStatus::Trialing : SubscriptionStatus::Pending,
-            'quantity'              => $quantity,
-            'trial_ends_at'         => $trialing ? now()->addDays($trialDays) : null,
-            'current_period_start'  => null,
-            'current_period_end'    => null,
-            'provider'              => 'manual',
-            'metadata'              => $options['metadata'] ?? null,
+            'subscriptionable_id' => $this->keyToString($billable->getKey()),
+            'plan_id' => $plan->id,
+            'name' => $name,
+            'status' => $trialing ? SubscriptionStatus::Trialing : SubscriptionStatus::Pending,
+            'quantity' => $quantity,
+            'trial_ends_at' => $trialing ? now()->addDays($trialDays) : null,
+            'current_period_start' => null,
+            'current_period_end' => null,
+            'provider' => 'manual',
+            'metadata' => $options['metadata'] ?? null,
         ]);
 
         event(new SubscriptionCreated($subscription));
@@ -197,14 +198,14 @@ final class ManualDriver implements PaymentDriverInterface
 
         $plan = $subscription->plan;
 
-        $start  = $activatedAt ?? now();
-        $end    = $plan !== null ? $this->computePeriodEnd($start, $plan) : null;
+        $start = $activatedAt ?? now();
+        $end = $plan !== null ? $this->computePeriodEnd($start, $plan) : null;
 
         $subscription->update([
-            'status'               => SubscriptionStatus::Active,
-            'trial_ends_at'        => null,
+            'status' => SubscriptionStatus::Active,
+            'trial_ends_at' => null,
             'current_period_start' => $start,
-            'current_period_end'   => $end,
+            'current_period_end' => $end,
         ]);
 
         event(new SubscriptionActivated($subscription));
@@ -238,12 +239,12 @@ final class ManualDriver implements PaymentDriverInterface
         }
 
         $newStart = $periodStart ?? $subscription->current_period_end ?? now();
-        $newEnd   = $this->computePeriodEnd($newStart, $plan);
+        $newEnd = $this->computePeriodEnd($newStart, $plan);
 
         $subscription->update([
-            'status'               => SubscriptionStatus::Active,
+            'status' => SubscriptionStatus::Active,
             'current_period_start' => $newStart,
-            'current_period_end'   => $newEnd,
+            'current_period_end' => $newEnd,
         ]);
 
         event(new SubscriptionRenewed($subscription));
@@ -325,7 +326,7 @@ final class ManualDriver implements PaymentDriverInterface
         bool $immediate = false,
     ): Subscription {
         $attrs = [
-            'status'       => SubscriptionStatus::Cancelled,
+            'status' => SubscriptionStatus::Cancelled,
             'cancelled_at' => now(),
         ];
 
@@ -347,9 +348,9 @@ final class ManualDriver implements PaymentDriverInterface
     public function expireSubscription(Subscription $subscription): Subscription
     {
         $subscription->update([
-            'status'             => SubscriptionStatus::Expired,
+            'status' => SubscriptionStatus::Expired,
             'current_period_end' => now(),
-            'cancelled_at'       => $subscription->cancelled_at ?? now(),
+            'cancelled_at' => $subscription->cancelled_at ?? now(),
         ]);
 
         event(new SubscriptionExpired($subscription));
@@ -366,7 +367,7 @@ final class ManualDriver implements PaymentDriverInterface
      *   'paid_at'    Carbon  When payment was received (default now())
      *   'metadata'   array   Arbitrary key/value data
      *
-     * @param array{currency?: string, paid_at?: Carbon, metadata?: array<string,mixed>} $options
+     * @param  array{currency?: string, paid_at?: Carbon, metadata?: array<string,mixed>}  $options
      */
     public function recordPayment(
         Subscription $subscription,
@@ -374,22 +375,22 @@ final class ManualDriver implements PaymentDriverInterface
         string $reference,
         array $options = [],
     ): Payment {
-        $plan     = $subscription->plan;
+        $plan = $subscription->plan;
         $currency = ($options['currency'] ?? null)
             ?? ($plan !== null ? $plan->currency : 'ZAR');
 
         $payment = Payment::create([
             'subscriptionable_type' => $subscription->subscriptionable_type,
-            'subscriptionable_id'   => $subscription->subscriptionable_id,
-            'subscription_id'       => $subscription->id,
-            'amount'                => $amount,
-            'currency'              => $currency,
-            'status'                => PaymentStatus::Succeeded,
-            'type'                  => PaymentType::Charge,
-            'provider'              => 'manual',
-            'provider_reference'    => $reference,
-            'paid_at'               => $options['paid_at'] ?? now(),
-            'metadata'              => $options['metadata'] ?? null,
+            'subscriptionable_id' => $subscription->subscriptionable_id,
+            'subscription_id' => $subscription->id,
+            'amount' => $amount,
+            'currency' => $currency,
+            'status' => PaymentStatus::Succeeded,
+            'type' => PaymentType::Charge,
+            'provider' => 'manual',
+            'provider_reference' => $reference,
+            'paid_at' => $options['paid_at'] ?? now(),
+            'metadata' => $options['metadata'] ?? null,
         ]);
 
         event(new ManualPaymentRecorded($payment, $subscription));
@@ -404,20 +405,19 @@ final class ManualDriver implements PaymentDriverInterface
     private function computePeriodEnd(Carbon $start, Plan $plan): Carbon
     {
         return match ($plan->interval) {
-            BillingInterval::Weekly  => $start->copy()->addWeeks($plan->interval_count),
+            BillingInterval::Weekly => $start->copy()->addWeeks($plan->interval_count),
             BillingInterval::Monthly => $start->copy()->addMonths($plan->interval_count),
-            BillingInterval::Yearly  => $start->copy()->addYears($plan->interval_count),
-            BillingInterval::Once    => throw new \LogicException('Once-off plans do not have a recurring period end.'),
+            BillingInterval::Yearly => $start->copy()->addYears($plan->interval_count),
+            BillingInterval::Once => throw new \LogicException('Once-off plans do not have a recurring period end.'),
         };
     }
 
-    /** @param mixed $key */
     private function keyToString(mixed $key): string
     {
         return match (true) {
             is_string($key) => $key,
-            is_int($key)    => (string) $key,
-            default          => throw new \UnexpectedValueException('Model primary key must be a string or integer.'),
+            is_int($key) => (string) $key,
+            default => throw new \UnexpectedValueException('Model primary key must be a string or integer.'),
         };
     }
 }

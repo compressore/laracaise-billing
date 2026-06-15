@@ -5,6 +5,8 @@ parameters:
     paths:
         - src
     level: 9
+    parallel:
+        maximumNumberOfProcesses: 1
     ignoreErrors:
         # Billable is a library trait consumed by host-app models, not used within src/ itself
         -

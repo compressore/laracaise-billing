@@ -7,10 +7,10 @@ namespace Laracaise\Billing\ValueObjects;
 readonly class FeatureValue
 {
     /**
-     * @param string  $feature    Machine key matching billing_plan_features.feature
-     * @param ?string $value      null = unlimited; 'true'/'false' = flag; numeric string = hard limit
-     * @param bool    $resettable Whether usage resets each billing period (always from the plan feature)
-     * @param string  $source     'plan' or 'override'
+     * @param  string  $feature  Machine key matching billing_plan_features.feature
+     * @param  ?string  $value  null = unlimited; 'true'/'false' = flag; numeric string = hard limit
+     * @param  bool  $resettable  Whether usage resets each billing period (always from the plan feature)
+     * @param  string  $source  'plan' or 'override'
      */
     public function __construct(
         public string $feature,

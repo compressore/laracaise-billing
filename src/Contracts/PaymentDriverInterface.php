@@ -17,7 +17,7 @@ interface PaymentDriverInterface
      * Directly charge a stored payment method for a pending Payment record.
      * Returns the updated Payment.
      *
-     * @param array<string,mixed> $options
+     * @param  array<string,mixed>  $options
      */
     public function charge(Payment $payment, array $options = []): Payment;
 
@@ -25,7 +25,7 @@ interface PaymentDriverInterface
      * Begin a hosted/redirect checkout flow.
      * Returns a PendingTransaction with the checkout URL and driver-specific meta.
      *
-     * @param array<string,mixed> $options
+     * @param  array<string,mixed>  $options
      */
     public function initializeTransaction(Payment $payment, array $options = []): PendingTransaction;
 
@@ -45,7 +45,7 @@ interface PaymentDriverInterface
      * Create or retrieve a provider-side customer record for a billable model.
      * Returns the provider's customer identifier.
      *
-     * @param array<string,mixed> $data
+     * @param  array<string,mixed>  $data
      */
     public function createCustomer(Model $billable, array $data = []): string;
 }

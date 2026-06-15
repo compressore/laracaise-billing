@@ -70,7 +70,7 @@ final class UsageService
      *   none        — no transaction or re-check (low-traffic only)
      *
      * @throws FeatureNotAvailableException when the feature does not exist or is a flag
-     * @throws UsageLimitExceededException  when the limit would be exceeded
+     * @throws UsageLimitExceededException when the limit would be exceeded
      */
     public function consume(Subscription $subscription, string $feature, int $quantity = 1): UsageRecord
     {
@@ -85,7 +85,7 @@ final class UsageService
         }
 
         $limit = $resolved->limit() ?? 0;
-        $mode  = $this->lockingMode();
+        $mode = $this->lockingMode();
 
         if ($mode === 'none') {
             $used = $this->getUsageInPeriod($subscription, $feature);
@@ -168,7 +168,7 @@ final class UsageService
     private function insertRecord(Subscription $subscription, string $feature, int $quantity): UsageRecord
     {
         return $subscription->usageRecords()->create([
-            'feature'  => $feature,
+            'feature' => $feature,
             'quantity' => $quantity,
         ]);
     }

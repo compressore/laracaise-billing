@@ -146,12 +146,12 @@ final class BillingContext
      * Returns null when the feature is unlimited.
      *
      * @throws NoActiveSubscriptionException when there is no accessible subscription
-     * @throws FeatureNotAvailableException  when the feature does not exist or is a flag
+     * @throws FeatureNotAvailableException when the feature does not exist or is a flag
      */
     public function limit(string $feature, string $name = 'default'): ?int
     {
         $subscription = $this->requireAccessibleSubscription($name);
-        $resolved     = $this->features->resolve($subscription, $feature);
+        $resolved = $this->features->resolve($subscription, $feature);
 
         if ($resolved === null || $resolved->isFlag()) {
             throw new FeatureNotAvailableException($feature);
@@ -184,8 +184,8 @@ final class BillingContext
      * Record $quantity units of usage for the feature.
      *
      * @throws NoActiveSubscriptionException when there is no accessible subscription
-     * @throws FeatureNotAvailableException  when the feature does not exist or is a flag
-     * @throws UsageLimitExceededException   when the limit would be exceeded
+     * @throws FeatureNotAvailableException when the feature does not exist or is a flag
+     * @throws UsageLimitExceededException when the limit would be exceeded
      */
     public function consume(string $feature, int $quantity = 1, string $name = 'default'): UsageRecord
     {
@@ -197,7 +197,7 @@ final class BillingContext
      * Returns null for unlimited features.
      *
      * @throws NoActiveSubscriptionException when there is no accessible subscription
-     * @throws FeatureNotAvailableException  when the feature does not exist on the plan
+     * @throws FeatureNotAvailableException when the feature does not exist on the plan
      */
     public function remaining(string $feature, string $name = 'default'): ?int
     {

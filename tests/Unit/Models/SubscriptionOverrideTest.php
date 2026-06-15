@@ -18,7 +18,7 @@ it('can create an override using the factory', function () {
 });
 
 it('belongs to a subscription', function () {
-    $sub      = Subscription::factory()->create();
+    $sub = Subscription::factory()->create();
     $override = SubscriptionOverride::factory()->create(['subscription_id' => $sub->id]);
 
     expect($override->subscription->id)->toBe($sub->id);
@@ -26,7 +26,7 @@ it('belongs to a subscription', function () {
 
 it('isUnlimited returns true when value is null', function () {
     $unlimited = SubscriptionOverride::factory()->unlimited()->create();
-    $limited   = SubscriptionOverride::factory()->create(['value' => '500']);
+    $limited = SubscriptionOverride::factory()->create(['value' => '500']);
 
     expect($unlimited->isUnlimited())->toBeTrue()
         ->and($limited->isUnlimited())->toBeFalse();
@@ -43,8 +43,8 @@ it('limitValue returns null for unlimited overrides', function () {
 });
 
 it('isExpired returns true when expires_at is in the past', function () {
-    $expired  = SubscriptionOverride::factory()->expired()->create();
-    $active   = SubscriptionOverride::factory()->expiring(now()->addDays(5))->create();
+    $expired = SubscriptionOverride::factory()->expired()->create();
+    $active = SubscriptionOverride::factory()->expiring(now()->addDays(5))->create();
     $noExpiry = SubscriptionOverride::factory()->create();
 
     expect($expired->isExpired())->toBeTrue()
@@ -75,7 +75,7 @@ it('expired scope includes only expired overrides', function () {
 });
 
 it('cascades delete when subscription is deleted', function () {
-    $sub      = Subscription::factory()->create();
+    $sub = Subscription::factory()->create();
     SubscriptionOverride::factory()->create(['subscription_id' => $sub->id]);
 
     $sub->delete();

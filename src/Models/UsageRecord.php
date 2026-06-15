@@ -14,10 +14,10 @@ use Illuminate\Support\Carbon;
 use Laracaise\Billing\Database\Factories\UsageRecordFactory;
 
 /**
- * @property string      $id
- * @property string      $subscription_id
- * @property string      $feature
- * @property int         $quantity
+ * @property string $id
+ * @property string $subscription_id
+ * @property string $feature
+ * @property int $quantity
  * @property Carbon|null $recorded_at
  * @property Carbon|null $created_at
  */
@@ -25,6 +25,7 @@ class UsageRecord extends Model
 {
     /** @use HasFactory<UsageRecordFactory> */
     use HasFactory;
+
     use HasUlids;
 
     protected $table = 'billing_usage_records';
@@ -46,9 +47,9 @@ class UsageRecord extends Model
     protected function casts(): array
     {
         return [
-            'quantity'    => 'integer',
+            'quantity' => 'integer',
             'recorded_at' => 'datetime',
-            'created_at'  => 'datetime',
+            'created_at' => 'datetime',
         ];
     }
 
@@ -60,7 +61,7 @@ class UsageRecord extends Model
     protected static function booted(): void
     {
         static::creating(function (self $record): void {
-            $record->created_at  ??= now();
+            $record->created_at ??= now();
             $record->recorded_at ??= now();
         });
     }

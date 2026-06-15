@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laracaise\Billing\Concerns;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Laracaise\Billing\BillingContext;
 use Laracaise\Billing\BillingManager;
@@ -14,7 +15,7 @@ use Laracaise\Billing\Models\Subscription;
  * Adds billing relationships and the fluent billing() context to any Eloquent model.
  * Mix into User, Team, Organisation, or any other billable entity.
  *
- * @phpstan-require-extends \Illuminate\Database\Eloquent\Model
+ * @phpstan-require-extends Model
  */
 trait Billable
 {

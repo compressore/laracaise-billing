@@ -17,28 +17,29 @@ use Laracaise\Billing\Database\Factories\SubscriptionFactory;
 use Laracaise\Billing\Enums\SubscriptionStatus;
 
 /**
- * @property string                   $id
- * @property string                   $subscriptionable_type
- * @property string                   $subscriptionable_id
- * @property string                   $plan_id
- * @property string                   $name
- * @property SubscriptionStatus       $status
- * @property int                      $quantity
- * @property Carbon|null              $trial_ends_at
- * @property Carbon|null              $current_period_start
- * @property Carbon|null              $current_period_end
- * @property Carbon|null              $cancels_at
- * @property Carbon|null              $cancelled_at
- * @property string|null              $provider
- * @property string|null              $provider_id
+ * @property string $id
+ * @property string $subscriptionable_type
+ * @property string $subscriptionable_id
+ * @property string $plan_id
+ * @property string $name
+ * @property SubscriptionStatus $status
+ * @property int $quantity
+ * @property Carbon|null $trial_ends_at
+ * @property Carbon|null $current_period_start
+ * @property Carbon|null $current_period_end
+ * @property Carbon|null $cancels_at
+ * @property Carbon|null $cancelled_at
+ * @property string|null $provider
+ * @property string|null $provider_id
  * @property array<string,mixed>|null $metadata
- * @property Carbon|null              $created_at
- * @property Carbon|null              $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class Subscription extends Model
 {
     /** @use HasFactory<SubscriptionFactory> */
     use HasFactory;
+
     use HasUlids;
 
     protected $table = 'billing_subscriptions';
@@ -63,14 +64,14 @@ class Subscription extends Model
     protected function casts(): array
     {
         return [
-            'status'               => SubscriptionStatus::class,
-            'quantity'             => 'integer',
-            'trial_ends_at'        => 'datetime',
+            'status' => SubscriptionStatus::class,
+            'quantity' => 'integer',
+            'trial_ends_at' => 'datetime',
             'current_period_start' => 'datetime',
-            'current_period_end'   => 'datetime',
-            'cancels_at'           => 'datetime',
-            'cancelled_at'         => 'datetime',
-            'metadata'             => 'array',
+            'current_period_end' => 'datetime',
+            'cancels_at' => 'datetime',
+            'cancelled_at' => 'datetime',
+            'metadata' => 'array',
         ];
     }
 

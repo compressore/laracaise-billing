@@ -8,8 +8,8 @@ namespace Laracaise\Billing\ValueObjects;
 final readonly class PendingTransaction
 {
     /**
-     * @param array<string,mixed> $meta Driver-specific fields (not part of the stable contract).
-     * @param array<string,mixed> $raw  Full raw provider response, stored for audit.
+     * @param  array<string,mixed>  $meta  Driver-specific fields (not part of the stable contract).
+     * @param  array<string,mixed>  $raw  Full raw provider response, stored for audit.
      */
     public function __construct(
         public string $reference,

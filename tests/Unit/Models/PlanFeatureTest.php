@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 use Laracaise\Billing\Models\Plan;
 use Laracaise\Billing\Models\PlanFeature;
@@ -18,7 +19,7 @@ it('can create a plan feature using the factory', function () {
 });
 
 it('belongs to a plan', function () {
-    $plan    = Plan::factory()->create();
+    $plan = Plan::factory()->create();
     $feature = PlanFeature::factory()->create(['plan_id' => $plan->id]);
 
     expect($feature->plan->id)->toBe($plan->id);
@@ -26,14 +27,14 @@ it('belongs to a plan', function () {
 
 it('correctly identifies an unlimited feature', function () {
     $unlimited = PlanFeature::factory()->unlimited()->create();
-    $limited   = PlanFeature::factory()->limit(500)->create();
+    $limited = PlanFeature::factory()->limit(500)->create();
 
     expect($unlimited->isUnlimited())->toBeTrue()
         ->and($limited->isUnlimited())->toBeFalse();
 });
 
 it('correctly identifies a flag feature', function () {
-    $flag  = PlanFeature::factory()->flag()->create();
+    $flag = PlanFeature::factory()->flag()->create();
     $limit = PlanFeature::factory()->limit(100)->create();
 
     expect($flag->isFlag())->toBeTrue()
@@ -41,7 +42,7 @@ it('correctly identifies a flag feature', function () {
 });
 
 it('returns the correct flag value', function () {
-    $enabled  = PlanFeature::factory()->flag(true)->create();
+    $enabled = PlanFeature::factory()->flag(true)->create();
     $disabled = PlanFeature::factory()->flag(false)->create();
 
     expect($enabled->flagValue())->toBeTrue()
@@ -80,5 +81,5 @@ it('enforces unique feature key per plan', function () {
     expect(fn () => PlanFeature::factory()->create([
         'plan_id' => $plan->id,
         'feature' => 'seats',
-    ]))->toThrow(\Illuminate\Database\QueryException::class);
+    ]))->toThrow(QueryException::class);
 });

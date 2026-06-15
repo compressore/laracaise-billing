@@ -39,10 +39,10 @@ function planWith(array $features = []): Plan
 function subscribeOwner(BillableModel $owner, Plan $plan, array $attrs = []): Subscription
 {
     return Subscription::factory()->forOwner($owner)->create(array_merge([
-        'plan_id'              => $plan->id,
-        'status'               => SubscriptionStatus::Active,
+        'plan_id' => $plan->id,
+        'status' => SubscriptionStatus::Active,
         'current_period_start' => now()->startOfMonth(),
-        'current_period_end'   => now()->endOfMonth(),
+        'current_period_end' => now()->endOfMonth(),
     ], $attrs));
 }
 
@@ -62,8 +62,8 @@ it('billing() on a billable model returns a BillingContext', function () {
 
 it('subscription() returns the active subscription', function () {
     $owner = owner();
-    $plan  = Plan::factory()->create();
-    $sub   = subscribeOwner($owner, $plan);
+    $plan = Plan::factory()->create();
+    $sub = subscribeOwner($owner, $plan);
 
     expect($owner->billing()->subscription()?->id)->toBe($sub->id);
 });
@@ -76,7 +76,7 @@ it('subscription() returns null when no subscription exists', function () {
 
 it('subscription() returns a trialing subscription', function () {
     $owner = owner();
-    $plan  = Plan::factory()->create();
+    $plan = Plan::factory()->create();
     subscribeOwner($owner, $plan, ['status' => SubscriptionStatus::Trialing]);
 
     expect($owner->billing()->subscription())->not->toBeNull();
@@ -84,9 +84,9 @@ it('subscription() returns a trialing subscription', function () {
 
 it('subscription() returns a cancelled subscription within its grace period', function () {
     $owner = owner();
-    $plan  = Plan::factory()->create();
+    $plan = Plan::factory()->create();
     subscribeOwner($owner, $plan, [
-        'status'             => SubscriptionStatus::Cancelled,
+        'status' => SubscriptionStatus::Cancelled,
         'current_period_end' => now()->addDays(5),
     ]);
 
@@ -95,9 +95,9 @@ it('subscription() returns a cancelled subscription within its grace period', fu
 
 it('subscription() returns null when cancelled subscription has expired', function () {
     $owner = owner();
-    $plan  = Plan::factory()->create();
+    $plan = Plan::factory()->create();
     subscribeOwner($owner, $plan, [
-        'status'             => SubscriptionStatus::Cancelled,
+        'status' => SubscriptionStatus::Cancelled,
         'current_period_end' => now()->subDay(),
     ]);
 
@@ -110,7 +110,7 @@ it('subscription() returns null when cancelled subscription has expired', functi
 
 it('plan() returns the plan of the current subscription', function () {
     $owner = owner();
-    $plan  = planWith();
+    $plan = planWith();
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->plan()?->id)->toBe($plan->id);
@@ -183,7 +183,7 @@ it('hasFeature() returns false for a feature not on the plan', function () {
 
 it('hasFeature() returns true for an enabled flag feature', function () {
     $owner = owner();
-    $plan  = planWith(['reports' => ['value' => 'true', 'resettable' => false]]);
+    $plan = planWith(['reports' => ['value' => 'true', 'resettable' => false]]);
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->hasFeature('reports'))->toBeTrue();
@@ -191,7 +191,7 @@ it('hasFeature() returns true for an enabled flag feature', function () {
 
 it('hasFeature() returns false for a disabled flag feature', function () {
     $owner = owner();
-    $plan  = planWith(['reports' => ['value' => 'false', 'resettable' => false]]);
+    $plan = planWith(['reports' => ['value' => 'false', 'resettable' => false]]);
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->hasFeature('reports'))->toBeFalse();
@@ -199,7 +199,7 @@ it('hasFeature() returns false for a disabled flag feature', function () {
 
 it('hasFeature() returns true for an unlimited numeric feature', function () {
     $owner = owner();
-    $plan  = planWith(['storage' => ['value' => null, 'resettable' => false]]);
+    $plan = planWith(['storage' => ['value' => null, 'resettable' => false]]);
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->hasFeature('storage'))->toBeTrue();
@@ -207,7 +207,7 @@ it('hasFeature() returns true for an unlimited numeric feature', function () {
 
 it('hasFeature() returns true for a numeric feature with a positive limit', function () {
     $owner = owner();
-    $plan  = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
+    $plan = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->hasFeature('api_calls'))->toBeTrue();
@@ -215,7 +215,7 @@ it('hasFeature() returns true for a numeric feature with a positive limit', func
 
 it('hasFeature() returns false for a past_due (suspended) subscription', function () {
     $owner = owner();
-    $plan  = planWith(['reports' => ['value' => 'true', 'resettable' => false]]);
+    $plan = planWith(['reports' => ['value' => 'true', 'resettable' => false]]);
     subscribeOwner($owner, $plan, ['status' => SubscriptionStatus::PastDue]);
 
     expect($owner->billing()->hasFeature('reports'))->toBeFalse();
@@ -238,7 +238,7 @@ it('limit() throws FeatureNotAvailableException for a feature not on the plan', 
 
 it('limit() throws FeatureNotAvailableException for a flag feature', function () {
     $owner = owner();
-    $plan  = planWith(['reports' => ['value' => 'true', 'resettable' => false]]);
+    $plan = planWith(['reports' => ['value' => 'true', 'resettable' => false]]);
     subscribeOwner($owner, $plan);
 
     $owner->billing()->limit('reports');
@@ -246,7 +246,7 @@ it('limit() throws FeatureNotAvailableException for a flag feature', function ()
 
 it('limit() returns null for an unlimited feature', function () {
     $owner = owner();
-    $plan  = planWith(['storage' => ['value' => null, 'resettable' => false]]);
+    $plan = planWith(['storage' => ['value' => null, 'resettable' => false]]);
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->limit('storage'))->toBeNull();
@@ -254,7 +254,7 @@ it('limit() returns null for an unlimited feature', function () {
 
 it('limit() returns the numeric limit', function () {
     $owner = owner();
-    $plan  = planWith(['api_calls' => ['value' => '500', 'resettable' => true]]);
+    $plan = planWith(['api_calls' => ['value' => '500', 'resettable' => true]]);
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->limit('api_calls'))->toBe(500);
@@ -270,7 +270,7 @@ it('canUse() returns false when not subscribed', function () {
 
 it('canUse() returns true when under the limit', function () {
     $owner = owner();
-    $plan  = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
+    $plan = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->canUse('api_calls', 50))->toBeTrue();
@@ -278,8 +278,8 @@ it('canUse() returns true when under the limit', function () {
 
 it('canUse() returns false when over the limit', function () {
     $owner = owner();
-    $plan  = planWith(['api_calls' => ['value' => '10', 'resettable' => true]]);
-    $sub   = subscribeOwner($owner, $plan);
+    $plan = planWith(['api_calls' => ['value' => '10', 'resettable' => true]]);
+    $sub = subscribeOwner($owner, $plan);
     UsageRecord::factory()->create(['subscription_id' => $sub->id, 'feature' => 'api_calls', 'quantity' => 10, 'recorded_at' => now()]);
 
     expect($owner->billing()->canUse('api_calls', 1))->toBeFalse();
@@ -295,7 +295,7 @@ it('consume() throws NoActiveSubscriptionException when not subscribed', functio
 
 it('consume() records usage and returns a UsageRecord', function () {
     $owner = owner();
-    $plan  = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
+    $plan = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
     subscribeOwner($owner, $plan);
 
     $record = $owner->billing()->consume('api_calls', 5);
@@ -307,8 +307,8 @@ it('consume() records usage and returns a UsageRecord', function () {
 
 it('consume() throws UsageLimitExceededException when the limit is already reached', function () {
     $owner = owner();
-    $plan  = planWith(['api_calls' => ['value' => '5', 'resettable' => true]]);
-    $sub   = subscribeOwner($owner, $plan);
+    $plan = planWith(['api_calls' => ['value' => '5', 'resettable' => true]]);
+    $sub = subscribeOwner($owner, $plan);
     UsageRecord::factory()->create(['subscription_id' => $sub->id, 'feature' => 'api_calls', 'quantity' => 5, 'recorded_at' => now()]);
 
     $owner->billing()->consume('api_calls', 1);
@@ -324,8 +324,8 @@ it('remaining() throws NoActiveSubscriptionException when not subscribed', funct
 
 it('remaining() returns remaining units', function () {
     $owner = owner();
-    $plan  = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
-    $sub   = subscribeOwner($owner, $plan);
+    $plan = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
+    $sub = subscribeOwner($owner, $plan);
     UsageRecord::factory()->create(['subscription_id' => $sub->id, 'feature' => 'api_calls', 'quantity' => 40, 'recorded_at' => now()]);
 
     expect($owner->billing()->remaining('api_calls'))->toBe(60);
@@ -333,7 +333,7 @@ it('remaining() returns remaining units', function () {
 
 it('remaining() returns null for an unlimited feature', function () {
     $owner = owner();
-    $plan  = planWith(['storage' => ['value' => null, 'resettable' => false]]);
+    $plan = planWith(['storage' => ['value' => null, 'resettable' => false]]);
     subscribeOwner($owner, $plan);
 
     expect($owner->billing()->remaining('storage'))->toBeNull();
@@ -349,8 +349,8 @@ it('resetUsage() throws NoActiveSubscriptionException when not subscribed', func
 
 it('resetUsage() zeroes usage for a specific feature', function () {
     $owner = owner();
-    $plan  = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
-    $sub   = subscribeOwner($owner, $plan);
+    $plan = planWith(['api_calls' => ['value' => '100', 'resettable' => true]]);
+    $sub = subscribeOwner($owner, $plan);
     UsageRecord::factory()->create(['subscription_id' => $sub->id, 'feature' => 'api_calls', 'quantity' => 70, 'recorded_at' => now()]);
 
     $owner->billing()->resetUsage('api_calls');
@@ -360,10 +360,10 @@ it('resetUsage() zeroes usage for a specific feature', function () {
 
 it('resetUsage() zeroes all resettable features when called without a feature name', function () {
     $owner = owner();
-    $plan  = planWith([
+    $plan = planWith([
         'api_calls' => ['value' => '100', 'resettable' => true],
-        'exports'   => ['value' => '20', 'resettable' => true],
-        'storage'   => ['value' => null, 'resettable' => false],
+        'exports' => ['value' => '20', 'resettable' => true],
+        'storage' => ['value' => null, 'resettable' => false],
     ]);
     $sub = subscribeOwner($owner, $plan);
     UsageRecord::factory()->create(['subscription_id' => $sub->id, 'feature' => 'api_calls', 'quantity' => 80, 'recorded_at' => now()]);
@@ -380,8 +380,8 @@ it('resetUsage() zeroes all resettable features when called without a feature na
 // ---------------------------------------------------------------------------
 
 it('named subscriptions are isolated from each other', function () {
-    $owner     = owner();
-    $planA     = planWith(['feature_a' => ['value' => 'true', 'resettable' => false]]);
+    $owner = owner();
+    $planA = planWith(['feature_a' => ['value' => 'true', 'resettable' => false]]);
     $planAddon = planWith(['feature_b' => ['value' => 'true', 'resettable' => false]]);
 
     subscribeOwner($owner, $planA, ['name' => 'default']);

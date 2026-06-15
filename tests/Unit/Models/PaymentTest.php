@@ -39,22 +39,22 @@ it('casts type to PaymentType enum', function () {
 });
 
 it('belongs to a subscription', function () {
-    $sub     = Subscription::factory()->create();
+    $sub = Subscription::factory()->create();
     $payment = Payment::factory()->create(['subscription_id' => $sub->id]);
 
     expect($payment->subscription->id)->toBe($sub->id);
 });
 
 it('morphs to the subscriptionable owner', function () {
-    $owner   = BillableModel::create(['name' => 'Acme']);
-    $sub     = Subscription::factory()->forOwner($owner)->create();
+    $owner = BillableModel::create(['name' => 'Acme']);
+    $sub = Subscription::factory()->forOwner($owner)->create();
     $payment = Payment::factory()->forOwner($owner)->create(['subscription_id' => $sub->id]);
 
     expect($payment->subscriptionable->id)->toBe($owner->id);
 });
 
 it('can exist without a subscription (standalone payment)', function () {
-    $owner   = BillableModel::create(['name' => 'Standalone']);
+    $owner = BillableModel::create(['name' => 'Standalone']);
     $payment = Payment::factory()->forOwner($owner)->create(['subscription_id' => null]);
 
     expect($payment->subscription)->toBeNull();

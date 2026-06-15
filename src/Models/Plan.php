@@ -14,25 +14,26 @@ use Laracaise\Billing\Database\Factories\PlanFactory;
 use Laracaise\Billing\Enums\BillingInterval;
 
 /**
- * @property string              $id
- * @property string              $name
- * @property string              $slug
- * @property string|null         $description
- * @property int                 $amount
- * @property string              $currency
- * @property BillingInterval     $interval
- * @property int                 $interval_count
- * @property int                 $trial_days
- * @property bool                $is_active
- * @property int                 $sort_order
+ * @property string $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property int $amount
+ * @property string $currency
+ * @property BillingInterval $interval
+ * @property int $interval_count
+ * @property int $trial_days
+ * @property bool $is_active
+ * @property int $sort_order
  * @property array<string,mixed>|null $metadata
- * @property Carbon|null         $created_at
- * @property Carbon|null         $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class Plan extends Model
 {
     /** @use HasFactory<PlanFactory> */
     use HasFactory;
+
     use HasUlids;
 
     protected $table = 'billing_plans';
@@ -54,13 +55,13 @@ class Plan extends Model
     protected function casts(): array
     {
         return [
-            'amount'         => 'integer',
-            'interval'       => BillingInterval::class,
+            'amount' => 'integer',
+            'interval' => BillingInterval::class,
             'interval_count' => 'integer',
-            'trial_days'     => 'integer',
-            'is_active'      => 'boolean',
-            'sort_order'     => 'integer',
-            'metadata'       => 'array',
+            'trial_days' => 'integer',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
+            'metadata' => 'array',
         ];
     }
 

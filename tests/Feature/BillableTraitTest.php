@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laracaise\Billing\Models\Payment;
 use Laracaise\Billing\Models\Subscription;
+use Laracaise\Billing\Models\UsageRecord;
 use Laracaise\Billing\Tests\Fixtures\BillableModel;
 
 it('provides a subscriptions morph-many relationship', function () {
@@ -38,7 +39,7 @@ it('scopes subscription morph correctly by model class', function () {
 
 it('provides a payments morph-many relationship', function () {
     $owner = BillableModel::create(['name' => 'Acme']);
-    $sub   = Subscription::factory()->forOwner($owner)->create();
+    $sub = Subscription::factory()->forOwner($owner)->create();
 
     Payment::factory()->forOwner($owner)->create(['subscription_id' => $sub->id]);
     Payment::factory()->forOwner($owner)->create(['subscription_id' => null]);
@@ -69,12 +70,12 @@ it('can eager-load subscriptions with the plan', function () {
 
 it('can eager-load subscriptions with usage records', function () {
     $owner = BillableModel::create(['name' => 'Acme']);
-    $sub   = Subscription::factory()->forOwner($owner)->create();
+    $sub = Subscription::factory()->forOwner($owner)->create();
 
-    \Laracaise\Billing\Models\UsageRecord::factory()->create([
+    UsageRecord::factory()->create([
         'subscription_id' => $sub->id,
-        'feature'         => 'api_calls',
-        'quantity'        => 10,
+        'feature' => 'api_calls',
+        'quantity' => 10,
     ]);
 
     $loaded = BillableModel::with('subscriptions.usageRecords')->find($owner->id);
@@ -84,7 +85,7 @@ it('can eager-load subscriptions with usage records', function () {
 
 it('resolves the correct subscriptionable instance via morphTo', function () {
     $owner = BillableModel::create(['name' => 'Resolves']);
-    $sub   = Subscription::factory()->forOwner($owner)->create();
+    $sub = Subscription::factory()->forOwner($owner)->create();
 
     $resolved = Subscription::find($sub->id)->subscriptionable;
 
