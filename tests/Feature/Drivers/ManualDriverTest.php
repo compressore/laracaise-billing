@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Event;
+use Laracaise\Billing\Contracts\PaymentDriverInterface;
 use Laracaise\Billing\Drivers\ManualDriver;
 use Laracaise\Billing\Enums\BillingInterval;
 use Laracaise\Billing\Enums\PaymentStatus;
@@ -94,7 +95,8 @@ function activeSubscription(BillableModel $owner, Plan $plan): Subscription
 // ---------------------------------------------------------------------------
 
 it('name() returns manual', function () {
-    expect(driver()->name())->toBe('manual');
+    expect(driver())->toBeInstanceOf(PaymentDriverInterface::class)
+        ->and(driver()->name())->toBe('manual');
 });
 
 // ---------------------------------------------------------------------------
@@ -752,6 +754,30 @@ it('verifyTransaction fires ManualPaymentRecorded when subscription is linked', 
         ManualPaymentRecorded::class,
         fn ($e) => $e->subscription->id === $sub->id
     );
+});
+
+it('verifyTransaction is idempotent for an already succeeded payment', function () {
+    Event::fake();
+
+    $owner = billable();
+    $sub = activeSubscription($owner, monthlyPlan());
+    $paidAt = now()->subDays(3)->startOfSecond();
+
+    $payment = Payment::factory()->forOwner($owner)->create([
+        'subscription_id' => $sub->id,
+        'provider' => 'manual',
+        'provider_reference' => 'TXN-777',
+        'status' => PaymentStatus::Succeeded,
+        'type' => PaymentType::Charge,
+        'paid_at' => $paidAt,
+    ]);
+
+    $result = driver()->verifyTransaction('TXN-777');
+
+    expect($result->id)->toBe($payment->id)
+        ->and($result->paid_at?->toDateTimeString())->toBe($paidAt->toDateTimeString());
+
+    Event::assertNotDispatched(ManualPaymentRecorded::class);
 });
 
 it('verifyTransaction throws when the reference does not exist', function () {

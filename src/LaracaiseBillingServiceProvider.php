@@ -25,6 +25,8 @@ class LaracaiseBillingServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadRoutesFrom(__DIR__.'/../routes/laracaise-billing.php');
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../config/laracaise-billing.php' => config_path('laracaise-billing.php'),

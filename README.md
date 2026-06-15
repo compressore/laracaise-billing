@@ -41,7 +41,7 @@ After publishing, the config file lives at `config/laracaise-billing.php`.
 
 ```php
 return [
-    'driver'   => env('BILLING_DRIVER', 'paystack'),
+    'driver'   => env('LARACAISE_BILLING_DRIVER', 'manual'),
     'currency' => env('BILLING_CURRENCY', 'ZAR'),
 
     'usage_tracking' => [
@@ -49,13 +49,25 @@ return [
     ],
 
     'drivers'  => [
+        'manual' => [],
+
         'paystack' => [
-            'secret_key'     => env('PAYSTACK_SECRET_KEY'),
             'public_key'     => env('PAYSTACK_PUBLIC_KEY'),
+            'secret_key'     => env('PAYSTACK_SECRET_KEY'),
             'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'),
+            'base_url'       => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
         ],
     ],
 ];
+```
+
+For local Paystack development, use Paystack test credentials only:
+
+```dotenv
+LARACAISE_BILLING_DRIVER=paystack
+PAYSTACK_PUBLIC_KEY=pk_test_xxxxx
+PAYSTACK_SECRET_KEY=sk_test_xxxxx
+PAYSTACK_WEBHOOK_SECRET=xxxxx
 ```
 
 ## Usage

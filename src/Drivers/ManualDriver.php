@@ -87,6 +87,10 @@ final class ManualDriver implements PaymentDriverInterface
             ->where('provider_reference', $reference)
             ->firstOrFail();
 
+        if ($payment->isSucceeded()) {
+            return $payment;
+        }
+
         $payment->update([
             'status' => PaymentStatus::Succeeded,
             'paid_at' => now(),

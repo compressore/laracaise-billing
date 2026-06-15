@@ -7,6 +7,7 @@ parameters:
     level: 9
     parallel:
         maximumNumberOfProcesses: 1
+        minimumNumberOfJobsPerProcess: 1000
     ignoreErrors:
         # Billable is a library trait consumed by host-app models, not used within src/ itself
         -

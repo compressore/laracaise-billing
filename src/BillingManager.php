@@ -6,6 +6,10 @@ namespace Laracaise\Billing;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
+use Laracaise\Billing\Contracts\PaymentDriverInterface;
+use Laracaise\Billing\Drivers\ManualDriver;
+use Laracaise\Billing\Drivers\PaystackDriver;
 use Laracaise\Billing\Models\Plan;
 use Laracaise\Billing\Services\FeatureService;
 use Laracaise\Billing\Services\UsageService;
@@ -25,6 +29,27 @@ final class BillingManager
     public function for(Model $entity): BillingContext
     {
         return new BillingContext($entity, $this->features, $this->usage);
+    }
+
+    /** Resolve a supported payment driver by name, or the configured default. */
+    public function driver(?string $name = null): PaymentDriverInterface
+    {
+        $configuredDriver = config('laracaise-billing.driver', 'manual');
+        $driver = $name ?? (is_string($configuredDriver) ? $configuredDriver : 'manual');
+
+        return match ($driver) {
+            'manual' => new ManualDriver,
+            'paystack' => new PaystackDriver($this->driverConfig('paystack')),
+            default => throw new InvalidArgumentException("Unsupported billing driver [{$driver}]."),
+        };
+    }
+
+    /** @return array<string,mixed> */
+    private function driverConfig(string $driver): array
+    {
+        $config = config("laracaise-billing.drivers.{$driver}", []);
+
+        return is_array($config) ? $config : [];
     }
 
     /** Retrieve an active plan by slug. Returns null if not found or inactive. */

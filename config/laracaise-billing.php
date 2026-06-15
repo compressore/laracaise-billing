@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'driver' => env('BILLING_DRIVER', 'paystack'),
+    'driver' => env('LARACAISE_BILLING_DRIVER', 'manual'),
 
     /*
     |--------------------------------------------------------------------------
@@ -33,13 +33,23 @@ return [
     | Drivers
     |--------------------------------------------------------------------------
     |
-    | Driver-specific configuration. Keys are added here as drivers are
-    | implemented.
+    | Driver-specific configuration. Secret values must come from the host
+    | application's environment and must never be hardcoded in the package.
+    |
+    | For local/development Paystack testing, use Paystack test keys only:
+    | pk_test_* for the public key and sk_test_* for the secret key.
     |
     */
 
     'drivers' => [
-        // 'paystack' => [...]
+        'manual' => [],
+
+        'paystack' => [
+            'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+            'secret_key' => env('PAYSTACK_SECRET_KEY'),
+            'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'),
+            'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
+        ],
     ],
 
     /*

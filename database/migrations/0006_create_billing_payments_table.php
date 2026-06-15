@@ -37,8 +37,8 @@ return new class extends Migration
             );
             $table->index('status', 'bpa_status_idx');
             $table->index('paid_at', 'bpa_paid_at_idx');
-            // Provider reference lookup (webhook reconciliation)
-            $table->index(['provider', 'provider_reference'], 'bpa_provider_idx');
+            // Provider reference lookup (webhook reconciliation / idempotency)
+            $table->unique(['provider', 'provider_reference'], 'bpa_provider_ref_unique');
         });
     }
 

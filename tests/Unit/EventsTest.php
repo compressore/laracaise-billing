@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Laracaise\Billing\Events\ManualPaymentRecorded;
+use Laracaise\Billing\Events\PaymentFailed;
+use Laracaise\Billing\Events\PaymentSucceeded;
 use Laracaise\Billing\Events\SubscriptionActivated;
 use Laracaise\Billing\Events\SubscriptionCancelled;
 use Laracaise\Billing\Events\SubscriptionCreated;
@@ -39,3 +41,13 @@ it('manual payment event exposes the payment and subscription payloads', functio
     expect($event->payment)->toBe($payment)
         ->and($event->subscription)->toBe($subscription);
 });
+
+it('payment events expose the payment payload', function (string $eventClass) {
+    $payment = Payment::factory()->create();
+    $event = new $eventClass($payment);
+
+    expect($event->payment)->toBe($payment);
+})->with([
+    PaymentFailed::class,
+    PaymentSucceeded::class,
+]);

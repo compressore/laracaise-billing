@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
 use Laracaise\Billing\BillingContext;
 use Laracaise\Billing\BillingManager;
+use Laracaise\Billing\Contracts\PaymentDriverInterface;
 use Laracaise\Billing\Models\Plan;
 
 /**
  * @method static BillingContext for(Model $entity)
+ * @method static PaymentDriverInterface driver(?string $name = null)
  * @method static Plan|null plan(string $slug)
  * @method static Collection<int, Plan> plans()
  *
