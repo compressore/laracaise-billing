@@ -97,6 +97,19 @@ Migrations for `billing_webhook_events`, `billing_payment_methods`, and `billing
 
 ---
 
+## Release preparation ✅
+
+Completed prior to tagging `v0.7.0`:
+
+- [x] PHPStan level 9 at 0 errors (fixed `BillingSyncCommand` mixed casts, `LaracaiseBillingServiceProvider` array access, middleware suppression documented in `phpstan.neon`)
+- [x] Pint formatting clean across all `src/` files
+- [x] Pint check job added to `.github/workflows/run-tests.yml`
+- [x] `composer.json` — updated description, expanded keywords, added `homepage` and `support`, corrected author email
+- [x] `CHANGELOG.md` — full history from v0.1.0 to v0.7.0
+- [x] `docs/release-checklist.md` — release checklist for every version and pre-v1.0 gate
+
+---
+
 ## Phase 8 — Paystack driver 🔲
 
 - [ ] `PaymentDriverInterface` contract

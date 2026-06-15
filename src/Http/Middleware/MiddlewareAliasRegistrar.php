@@ -12,8 +12,8 @@ final class MiddlewareAliasRegistrar
 {
     /** @var array<string, class-string> */
     public const array ALIASES = [
-        'billing.active'        => EnsureSubscriptionActive::class,
-        'billing.feature'       => EnsureFeatureAvailable::class,
+        'billing.active' => EnsureSubscriptionActive::class,
+        'billing.feature' => EnsureFeatureAvailable::class,
         'billing.not_suspended' => EnsureNotSuspended::class,
     ];
 

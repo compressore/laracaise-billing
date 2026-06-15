@@ -1,20 +1,30 @@
 {
     "name": "laracaise/billing",
-    "description": "A flexible billing package for Laravel applications.",
+    "description": "A flexible billing package for Laravel applications, with Paystack support and usage-based feature limits.",
     "type": "library",
     "license": "MIT",
+    "homepage": "https://github.com/laracaise/billing",
     "keywords": [
         "laravel",
         "billing",
         "payments",
+        "subscriptions",
+        "paystack",
+        "usage-tracking",
+        "feature-flags",
         "laracaise"
     ],
     "authors": [
         {
             "name": "Christian",
-            "email": "nyembo978@gmail.com"
+            "email": "christian@twomenandatruck.co.za",
+            "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/laracaise/billing/issues",
+        "source": "https://github.com/laracaise/billing"
+    },
     "require": {
         "php": "^8.4",
         "illuminate/contracts": "^12.0 || ^13.0",

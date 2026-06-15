@@ -27,6 +27,8 @@ final class BillingSyncCommand extends Command
 
         $count = 0;
 
+        $defaultCurrency = $this->strFrom(config('laracaise-billing.currency'), 'ZAR');
+
         foreach ($plans as $slug => $definition) {
             if (! is_string($slug) || ! is_array($definition)) {
                 continue;
@@ -35,15 +37,15 @@ final class BillingSyncCommand extends Command
             $plan = Plan::query()->updateOrCreate(
                 ['slug' => $slug],
                 [
-                    'name' => (string) ($definition['name'] ?? str($slug)->headline()),
-                    'description' => $definition['description'] ?? null,
-                    'amount' => (int) ($definition['amount'] ?? 0),
-                    'currency' => (string) ($definition['currency'] ?? config('laracaise-billing.currency', 'ZAR')),
-                    'interval' => $this->interval((string) ($definition['interval'] ?? BillingInterval::Monthly->value)),
-                    'interval_count' => (int) ($definition['interval_count'] ?? 1),
-                    'trial_days' => (int) ($definition['trial_days'] ?? 0),
+                    'name' => $this->strFrom($definition['name'] ?? null, str($slug)->headline()->value()),
+                    'description' => is_string($definition['description'] ?? null) ? $definition['description'] : null,
+                    'amount' => $this->intFrom($definition['amount'] ?? null, 0),
+                    'currency' => $this->strFrom($definition['currency'] ?? null, $defaultCurrency),
+                    'interval' => $this->interval($this->strFrom($definition['interval'] ?? null, BillingInterval::Monthly->value)),
+                    'interval_count' => $this->intFrom($definition['interval_count'] ?? null, 1),
+                    'trial_days' => $this->intFrom($definition['trial_days'] ?? null, 0),
                     'is_active' => (bool) ($definition['is_active'] ?? true),
-                    'sort_order' => (int) ($definition['sort_order'] ?? 0),
+                    'sort_order' => $this->intFrom($definition['sort_order'] ?? null, 0),
                     'metadata' => isset($definition['metadata']) && is_array($definition['metadata'])
                         ? $definition['metadata']
                         : null,
@@ -72,10 +74,6 @@ final class BillingSyncCommand extends Command
         $synced = [];
 
         foreach ($features as $feature => $definition) {
-            if (! is_string($feature)) {
-                continue;
-            }
-
             [$value, $resettable] = $this->featureDefinition($definition);
 
             PlanFeature::query()->updateOrCreate(
@@ -106,14 +104,24 @@ final class BillingSyncCommand extends Command
             $value = $definition['value'] ?? null;
 
             return [
-                $value === null ? null : (is_bool($value) ? ($value ? 'true' : 'false') : (string) $value),
+                $value === null ? null : (is_bool($value) ? ($value ? 'true' : 'false') : (is_scalar($value) ? (string) $value : null)),
                 (bool) ($definition['resettable'] ?? true),
             ];
         }
 
         return [
-            $definition === null ? null : (is_bool($definition) ? ($definition ? 'true' : 'false') : (string) $definition),
+            $definition === null ? null : (is_bool($definition) ? ($definition ? 'true' : 'false') : (is_scalar($definition) ? (string) $definition : null)),
             true,
         ];
+    }
+
+    private function strFrom(mixed $value, string $default): string
+    {
+        return is_string($value) ? $value : $default;
+    }
+
+    private function intFrom(mixed $value, int $default): int
+    {
+        return is_int($value) ? $value : $default;
     }
 }

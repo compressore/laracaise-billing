@@ -13,3 +13,8 @@ parameters:
         -
             identifier: trait.unused
             path: src/Concerns/Billable.php
+        # billing() is defined on the Billable trait; middleware resolves it at runtime via
+        # method_exists(). PHPStan sees the return type as ?Model and cannot infer trait methods.
+        -
+            identifier: method.notFound
+            path: src/Http/Middleware

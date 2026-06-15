@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Laracaise\Billing;
 
+use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Laracaise\Billing\Console\Commands\BillingExpireSubscriptionsCommand;
 use Laracaise\Billing\Console\Commands\BillingInstallCommand;
 use Laracaise\Billing\Console\Commands\BillingProcessRenewalsCommand;
 use Laracaise\Billing\Console\Commands\BillingResetUsageCommand;
 use Laracaise\Billing\Console\Commands\BillingSyncCommand;
-use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Laracaise\Billing\Http\Middleware\MiddlewareAliasRegistrar;
 use Laracaise\Billing\Services\FeatureService;
 use Laracaise\Billing\Services\UsageService;
@@ -56,7 +57,7 @@ class LaracaiseBillingServiceProvider extends ServiceProvider
 
     private function registerMiddleware(): void
     {
-        MiddlewareAliasRegistrar::registerOnRouter($this->app['router']);
+        MiddlewareAliasRegistrar::registerOnRouter($this->app->make(Router::class));
 
         // Also register on the kernel when it is first resolved. Testbench's
         // resolveApplicationHttpMiddlewares() hook resets $middlewareAliases on
