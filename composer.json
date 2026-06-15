@@ -12,7 +12,7 @@
     "authors": [
         {
             "name": "Christian",
-            "email": "christian@twomenandatruck.co.za"
+            "email": "nyembo978@gmail.com"
         }
     ],
     "require": {
@@ -21,8 +21,8 @@
         "illuminate/support": "^12.0 || ^13.0"
     },
     "require-dev": {
+        "larastan/larastan": "^3.0",
         "laravel/pint": "^1.0",
-        "nunomaduro/larastan": "^3.0",
         "orchestra/testbench": "^10.0",
         "pestphp/pest": "^3.0",
         "pestphp/pest-plugin-laravel": "^3.0"
@@ -51,7 +51,10 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true
