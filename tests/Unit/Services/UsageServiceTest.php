@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Event;
+use Laracaise\Billing\Events\UsageLimitReached;
 use Laracaise\Billing\Exceptions\FeatureNotAvailableException;
 use Laracaise\Billing\Exceptions\UsageLimitExceededException;
 use Laracaise\Billing\Models\Plan;
@@ -147,10 +149,15 @@ it('inserts a usage record when within the limit', function () {
 });
 
 it('throws UsageLimitExceededException when the limit would be exceeded', function () {
+    Event::fake([UsageLimitReached::class]);
     addUsageFeature($this->plan, 'api_calls', '10');
     UsageRecord::factory()->create(['subscription_id' => $this->sub->id, 'feature' => 'api_calls', 'quantity' => 10, 'recorded_at' => now()]);
 
-    $this->service->consume($this->sub, 'api_calls', 1);
+    try {
+        $this->service->consume($this->sub, 'api_calls', 1);
+    } finally {
+        Event::assertDispatched(UsageLimitReached::class);
+    }
 })->throws(UsageLimitExceededException::class);
 
 it('does not insert a record when the limit would be exceeded', function () {

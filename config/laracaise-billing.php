@@ -69,4 +69,16 @@ return [
         'locking' => env('BILLING_USAGE_LOCKING', 'atomic'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Plans
+    |--------------------------------------------------------------------------
+    |
+    | Optional source for `php artisan billing:sync`. Keep this empty when plans
+    | are managed through your own admin UI or seeders.
+    |
+    */
+
+    'plans' => [],
+
 ];

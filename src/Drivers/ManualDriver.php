@@ -21,6 +21,7 @@ use Laracaise\Billing\Events\SubscriptionExtended;
 use Laracaise\Billing\Events\SubscriptionRenewed;
 use Laracaise\Billing\Events\SubscriptionResumed;
 use Laracaise\Billing\Events\SubscriptionSuspended;
+use Laracaise\Billing\Events\TrialStarted;
 use Laracaise\Billing\Exceptions\InvalidTransitionException;
 use Laracaise\Billing\Models\Payment;
 use Laracaise\Billing\Models\Plan;
@@ -179,6 +180,10 @@ final class ManualDriver implements PaymentDriverInterface
         ]);
 
         event(new SubscriptionCreated($subscription));
+
+        if ($trialing) {
+            event(new TrialStarted($subscription));
+        }
 
         return $subscription;
     }

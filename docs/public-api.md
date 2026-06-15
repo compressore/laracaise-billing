@@ -228,9 +228,47 @@ All exceptions extend `Laracaise\Billing\Exceptions\BillingException`.
 
 | Command | Description |
 |---|---|
-| `billing:plans` | List all plans with feature counts |
-| `billing:sync-plans` | Sync plan definitions from config to database |
-| `billing:verify {reference}` | Verify a gateway transaction by reference |
+| `billing:install` | Publish package config and migrations |
+| `billing:sync` | Sync plan definitions from `laracaise-billing.plans` |
+| `billing:reset-usage {subscription?}` | Insert correction records to reset usage counters |
+| `billing:expire-subscriptions` | Expire ended cancelled subscriptions |
+| `billing:process-renewals` | Advance due recurring periods |
+
+Example scheduler registration in a host Laravel app:
+
+```php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('billing:process-renewals')->hourly();
+Schedule::command('billing:expire-subscriptions')->daily();
+```
+
+---
+
+## Route middleware
+
+The service provider registers these aliases:
+
+| Alias | Purpose |
+|---|---|
+| `billing.active` | Require an active, trialing, or in-grace-period subscription |
+| `billing.feature:{feature}` | Require a feature on the current accessible subscription |
+| `billing.not_suspended` | Reject `past_due` subscriptions |
+
+Examples:
+
+```php
+Route::get('/dashboard', DashboardController::class)
+    ->middleware('billing.active');
+
+Route::get('/reports', ReportsController::class)
+    ->middleware('billing.feature:reports');
+
+Route::get('/teams/{team}/reports', TeamReportsController::class)
+    ->middleware('billing.feature:reports,default,team');
+```
+
+When no route parameter is supplied, middleware checks the authenticated user.
 
 ---
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laracaise\Billing\Services;
 
 use Illuminate\Support\Facades\DB;
+use Laracaise\Billing\Events\UsageLimitReached;
 use Laracaise\Billing\Exceptions\FeatureNotAvailableException;
 use Laracaise\Billing\Exceptions\UsageLimitExceededException;
 use Laracaise\Billing\Models\Subscription;
@@ -91,6 +92,8 @@ final class UsageService
             $used = $this->getUsageInPeriod($subscription, $feature);
 
             if ($used + $quantity > $limit) {
+                event(new UsageLimitReached($subscription, $feature, $limit, $used, $quantity));
+
                 throw new UsageLimitExceededException($feature, $limit, $used, $quantity);
             }
 
@@ -105,6 +108,8 @@ final class UsageService
             $used = $this->getUsageInPeriod($subscription, $feature);
 
             if ($used + $quantity > $limit) {
+                event(new UsageLimitReached($subscription, $feature, $limit, $used, $quantity));
+
                 throw new UsageLimitExceededException($feature, $limit, $used, $quantity);
             }
 
