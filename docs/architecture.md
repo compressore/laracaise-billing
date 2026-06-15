@@ -26,7 +26,8 @@
                          │
 ┌────────────────────────▼─────────────────────────────────┐
 │                  Driver Layer                            │
-│  PaymentDriverInterface → PaystackDriver | NullDriver    │
+│  PaymentDriverInterface → PaystackDriver                 │
+│                           ManualDriver | NullDriver      │
 └────────────────────────┬─────────────────────────────────┘
                          │
                   External Gateway API
@@ -51,8 +52,9 @@ The central service class, bound as a singleton in the container. Exposes top-le
 Mixed into any Eloquent model that needs billing. Provides:
 
 - `billing(): BillingContext` — returns a fluent context object scoped to this model
-- `subscriptions(): HasMany` — Eloquent relation
-- `invoices(): MorphMany` — Eloquent relation
+- `subscriptions(): MorphMany` — via `subscriptionable` morph on `billing_subscriptions`
+- `invoices(): MorphMany` — via `invoiceable` morph on `billing_invoices`
+- `paymentMethods(): MorphMany` — via `billable` morph on `billing_payment_methods`
 
 ### `BillingContext`
 
@@ -100,9 +102,13 @@ interface PaymentDriverInterface
 }
 ```
 
+### `ManualDriver`
+
+A production driver for out-of-band billing (EFT, bank transfer, purchase orders). Makes no HTTP calls. Creates a `Transaction` in `pending` status and waits for an operator to mark it paid via the admin interface or `billing:mark-paid` command. Fires `TransactionSucceeded` once confirmed.
+
 ### `NullDriver`
 
-A no-op driver used in tests and for pure manual billing setups. All methods return fake successful responses.
+A **test-only** no-op driver. All methods discard their input and return successful-looking responses in memory. Never configure this in a production environment — use `ManualDriver` for real out-of-band billing.
 
 ---
 
@@ -149,12 +155,20 @@ $this->app->alias(BillingManager::class, 'billing');
 
 ## Multi-tenancy stance
 
-The package stores `billable_type` and `billable_id` morph columns on every ownership table. The host application is responsible for scoping queries to the correct tenant. The package never adds global scopes — that is the tenant package's job.
+The package uses polymorphic morph columns on every ownership table. Each table uses a semantically scoped morph name to keep relationships unambiguous:
+
+| Table | Morph columns | Relationship name |
+|---|---|---|
+| `billing_subscriptions` | `subscriptionable_type`, `subscriptionable_id` | `subscriptionable` |
+| `billing_invoices` | `invoiceable_type`, `invoiceable_id` | `invoiceable` |
+| `billing_payment_methods` | `billable_type`, `billable_id` | `billable` |
+
+The host application is responsible for scoping queries to the correct tenant. The package never adds global scopes — that is the tenant package's job.
 
 ```php
 // Host app with Spatie Multitenancy — the app scopes, not this package
 $team->billing()->subscribe('pro');
-// internally: Subscription::create(['billable_type' => Team::class, 'billable_id' => $team->id, ...])
+// internally: Subscription::create(['subscriptionable_type' => Team::class, 'subscriptionable_id' => $team->id, ...])
 ```
 
 ---

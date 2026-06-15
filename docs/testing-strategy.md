@@ -28,6 +28,7 @@ tests/
 │   │   └── InvoiceServiceTest.php
 │   └── Drivers/
 │       ├── NullDriverTest.php
+│       ├── ManualDriverTest.php    # pending transaction, mark-paid flow
 │       └── PaystackDriverTest.php  # HTTP-mocked
 └── Feature/
     ├── BillableTraitTest.php       # end-to-end through BillingContext
@@ -64,6 +65,15 @@ $subscription = Subscription::factory()->active()->for($team)->on($plan)->create
 ```
 
 ---
+
+## Driver isolation in tests
+
+| Driver | Use in tests? | How |
+|---|---|---|
+| `NullDriver` | Never — it is itself a test primitive | — |
+| `ManualDriver` | For testing the operator mark-paid flow | Configure directly; no faking needed |
+| `PaystackDriver` | Via `Http::fake()` in unit tests | Mock HTTP responses |
+| `FakeDriver` | For feature/integration tests | `Billing::fake()` |
 
 ## Faking the driver
 
@@ -104,6 +114,7 @@ $driver = app(PaystackDriver::class);
 $result = $driver->initializeTransaction($invoice);
 
 expect($result->reference)->toBe('PAY-test-001');
+expect($result->meta['access_code'])->toBe('xxxxx');   // Paystack-specific field lives in $meta
 Http::assertSent(fn ($r) => str_contains($r->url(), '/transaction/initialize'));
 ```
 

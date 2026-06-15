@@ -39,6 +39,7 @@ None of these work out-of-the-box with Paystack, which is the dominant payment g
 - This package will **not** manage user authentication or registration.
 - This package will **not** implement multi-tenancy itself.
 - This package will **not** provide a pre-built UI (Blade views, Livewire components, or Filament resources in this package).
+- This package will **not** generate PDF invoices or render printable invoice documents — that responsibility belongs to the host application or a dedicated rendering package.
 - This package will **not** support Stripe, Paddle, or other gateways in v1 (contracts exist so the community can add them).
 - This package will **not** handle tax calculations beyond storing a tax rate on the plan/invoice.
 
@@ -58,4 +59,4 @@ None of these work out-of-the-box with Paystack, which is the dominant payment g
 - **Driver pattern** — gateways are interchangeable without changing calling code.
 - **Immutable financial records** — invoices and transactions are never deleted; only statuses change.
 - **Event-driven** — every significant lifecycle moment fires a Laravel event so the host application can react without modifying package internals.
-- **Zero opinion on tenancy** — `billable_type` / `billable_id` morph columns handle any model.
+- **Zero opinion on tenancy** — polymorphic morph columns handle any Eloquent model as the owner. Each ownership table uses a semantically scoped morph name (`subscriptionable_*`, `invoiceable_*`, `billable_*`) so relationships are unambiguous.

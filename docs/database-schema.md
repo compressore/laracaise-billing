@@ -1,6 +1,14 @@
 # Database Schema
 
-All tables are prefixed with `billing_`. Column names follow snake_case. No foreign-key constraints cross package boundaries (the `billable_id` morph is intentionally unconstrained so any model can be billable).
+All tables are prefixed with `billing_`. Column names follow snake_case. No foreign-key constraints cross package boundaries (morph columns are intentionally unconstrained so any model can be the owner).
+
+Each ownership table uses a scoped morph name that reflects the relationship from the child's perspective:
+
+| Table | Morph columns | Why |
+|---|---|---|
+| `billing_subscriptions` | `subscriptionable_type / _id` | The subscription belongs to a *subscriptionable* |
+| `billing_invoices` | `invoiceable_type / _id` | The invoice belongs to an *invoiceable* |
+| `billing_payment_methods` | `billable_type / _id` | The payment method belongs to the *billable* entity directly |
 
 Monetary amounts are stored as **integers in the smallest currency unit** (cents for ZAR/USD, kobo for NGN). This eliminates floating-point rounding errors.
 
@@ -54,8 +62,8 @@ One row per subscription per billable model.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `ulid` PK | |
-| `billable_type` | `string` | Morph type |
-| `billable_id` | `string` | Morph ID (string to support ULIDs/UUIDs) |
+| `subscriptionable_type` | `string` | Morph type |
+| `subscriptionable_id` | `string` | Morph ID (string to support ULIDs/UUIDs) |
 | `plan_id` | `ulid` FK → `billing_plans` | Snapshot at subscription time |
 | `name` | `string` default `default` | Allows multiple concurrent subscriptions, e.g. `default`, `addon` |
 | `status` | `enum` | `pending`, `trialing`, `active`, `past_due`, `cancelled` |
@@ -71,7 +79,7 @@ One row per subscription per billable model.
 | `created_at` | `timestamp` | |
 | `updated_at` | `timestamp` | |
 
-Index: `(billable_type, billable_id, name, status)`.
+Index: `(subscriptionable_type, subscriptionable_id, name, status)`.
 
 ---
 
@@ -101,8 +109,8 @@ One invoice per billing event (renewal, manual, one-off).
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `ulid` PK | |
-| `billable_type` | `string` | Morph |
-| `billable_id` | `string` | Morph |
+| `invoiceable_type` | `string` | Morph type |
+| `invoiceable_id` | `string` | Morph ID (string to support ULIDs/UUIDs) |
 | `subscription_id` | `ulid` FK nullable | Null for manual invoices |
 | `number` | `string` unique | Human-readable, e.g. `INV-2026-0001` |
 | `status` | `enum` | `draft`, `open`, `paid`, `void`, `uncollectible` |
@@ -191,12 +199,12 @@ Index: `(billable_type, billable_id, is_default)`.
 
 ```
 Plan ──< PlanFeature
-Plan ──< Subscription >── Billable (morph)
+Plan ──< Subscription >── Subscriptionable (morph: subscriptionable_type/id)
 Subscription ──< UsageRecord
-Subscription ──< Invoice >── Billable (morph)
+Subscription ──< Invoice >── Invoiceable (morph: invoiceable_type/id)
 Invoice ──< InvoiceItem
 Invoice ──< Transaction
-Billable ──< PaymentMethod (morph)
+Billable ──< PaymentMethod  (morph: billable_type/id)
 ```
 
 ---

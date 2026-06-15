@@ -16,7 +16,7 @@ Status key: ✅ Done · 🔄 In progress · 🔲 Planned · 💡 Idea
 
 ---
 
-## Phase 1 — Documentation 🔄
+## Phase 1 — Documentation ✅
 
 - [x] `docs/vision.md`
 - [x] `docs/architecture.md`
@@ -97,7 +97,8 @@ Status key: ✅ Done · 🔄 In progress · 🔲 Planned · 💡 Idea
 ## Phase 8 — Paystack driver 🔲
 
 - [ ] `PaymentDriverInterface` contract
-- [ ] `NullDriver` (no-op, always succeeds)
+- [ ] `NullDriver` (test-only no-op)
+- [ ] `ManualDriver` (production out-of-band: EFT, bank transfer)
 - [ ] `PaystackDriver` — `initializeTransaction`, `verifyTransaction`, `charge`, `refund`, `createCustomer`
 - [ ] Paystack webhook controller + route registration
 - [ ] HMAC signature verification middleware
@@ -121,6 +122,7 @@ Status key: ✅ Done · 🔄 In progress · 🔲 Planned · 💡 Idea
 ## Phase 10 — Developer experience 🔲
 
 - [ ] `Artisan billing:verify {reference}` — manual transaction check
+- [ ] `Artisan billing:mark-paid {reference}` — operator marks a ManualDriver transaction paid
 - [ ] `Billing::fake()` documentation and examples
 - [ ] Published config documentation comments
 - [ ] Example `AppServiceProvider` snippets

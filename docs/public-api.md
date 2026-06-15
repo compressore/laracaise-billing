@@ -15,7 +15,11 @@ class Team extends Model
 }
 ```
 
-This gives the model a `billing()` method that returns a `BillingContext` scoped to that instance.
+This gives the model a `billing()` method that returns a `BillingContext` scoped to that instance, plus three Eloquent relations:
+
+- `subscriptions(): MorphMany` — via `subscriptionable` morph
+- `invoices(): MorphMany` — via `invoiceable` morph
+- `paymentMethods(): MorphMany` — via `billable` morph
 
 ---
 
@@ -191,11 +195,13 @@ Billing::fake()                               // swap all drivers with NullDrive
 readonly class PendingTransaction
 {
     public string $reference;
-    public string $checkoutUrl;   // Paystack authorization URL
-    public string $accessCode;    // Paystack popup access code
-    public array  $raw;           // full gateway response
+    public string $checkoutUrl;   // redirect URL for hosted checkout
+    public array  $meta;          // driver-specific fields (e.g. ['access_code' => '...'] for Paystack)
+    public array  $raw;           // full raw gateway response
 }
 ```
+
+`$meta` is intentionally untyped to keep the contract driver-agnostic. Callers that need a driver-specific field should read it from `$meta` and document that they depend on a particular driver.
 
 ### `FeatureCheck` (returned by `canUse()`)
 

@@ -74,8 +74,8 @@ South Africa / Nigeria / Ghana / Kenya — primary driver for v1.
 App → initializeTransaction(invoice)
     → POST /transaction/initialize  (Paystack)
     ← { authorization_url, access_code, reference }
-App → redirect user to authorization_url
-    or open Paystack inline popup with access_code
+App → redirect user to $pending->checkoutUrl          (authorization_url)
+    or open Paystack inline popup with $pending->meta['access_code']
 User completes payment on Paystack
 Paystack → webhook → POST /billing/webhook/paystack  (App)
 App → verifyTransaction(reference)
@@ -103,15 +103,49 @@ The package registers `POST /billing/webhook/paystack` automatically when the se
 
 ---
 
+### `manual`
+
+Production driver for out-of-band payment collection (EFT, bank transfer, purchase orders, cash). Makes no HTTP calls. On `charge()`, it creates a `Transaction` with status `pending` and returns immediately. An operator later marks the transaction paid (via admin UI or `billing:mark-paid {reference}` command), which fires `TransactionSucceeded` and marks the invoice paid.
+
+```php
+'driver' => 'manual',
+```
+
+No configuration keys required. Suitable as the default driver for businesses that invoice and collect offline.
+
+---
+
 ### `null`
 
-No-op driver for testing and manual-only setups. Always returns a successful `Transaction`.
+**Test-only** no-op driver. All methods discard input and return in-memory successful responses. Never configure this in a production environment — it silently swallows all payment calls. Use `manual` for real out-of-band billing and `Billing::fake()` for test isolation.
 
 ```php
 'driver' => 'null',
 ```
 
 No configuration keys required.
+
+---
+
+## `PendingTransaction` fields
+
+`initializeTransaction` returns a `PendingTransaction` value object. The contract is driver-agnostic:
+
+| Field | Type | Content |
+|---|---|---|
+| `$reference` | `string` | Unique transaction reference |
+| `$checkoutUrl` | `string` | Redirect URL for hosted checkout |
+| `$meta` | `array` | Driver-specific fields — not part of the stable contract |
+| `$raw` | `array` | Full raw gateway response, stored for audit |
+
+Paystack-specific values available in `$meta`:
+
+```php
+$pending->meta['access_code']  // Paystack inline popup access code
+$pending->meta['channel']      // e.g. 'card', 'bank'
+```
+
+Any future driver (Stripe, Yoco) adds its own keys to `$meta` without breaking the contract. Callers that need a driver-specific key should document the dependency.
 
 ---
 
