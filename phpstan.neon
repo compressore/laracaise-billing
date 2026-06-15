@@ -5,4 +5,8 @@ parameters:
     paths:
         - src
     level: 9
-    ignoreErrors: []
+    ignoreErrors:
+        # Billable is a library trait consumed by host-app models, not used within src/ itself
+        -
+            identifier: trait.unused
+            path: src/Concerns/Billable.php

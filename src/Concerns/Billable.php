@@ -15,11 +15,13 @@ use Laracaise\Billing\Models\Subscription;
  */
 trait Billable
 {
+    /** @return MorphMany<Subscription, $this> */
     public function subscriptions(): MorphMany
     {
         return $this->morphMany(Subscription::class, 'subscriptionable');
     }
 
+    /** @return MorphMany<Payment, $this> */
     public function payments(): MorphMany
     {
         return $this->morphMany(Payment::class, 'subscriptionable');

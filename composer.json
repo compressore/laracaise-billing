@@ -29,7 +29,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Laracaise\\Billing\\": "src/"
+            "Laracaise\\Billing\\": "src/",
+            "Laracaise\\Billing\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {

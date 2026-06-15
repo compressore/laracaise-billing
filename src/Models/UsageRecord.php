@@ -10,10 +10,20 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Laracaise\Billing\Database\Factories\UsageRecordFactory;
 
+/**
+ * @property string      $id
+ * @property string      $subscription_id
+ * @property string      $feature
+ * @property int         $quantity
+ * @property Carbon|null $recorded_at
+ * @property Carbon|null $created_at
+ */
 class UsageRecord extends Model
 {
+    /** @use HasFactory<UsageRecordFactory> */
     use HasFactory;
     use HasUlids;
 
@@ -59,6 +69,7 @@ class UsageRecord extends Model
     // Relationships
     // -------------------------------------------------------------------------
 
+    /** @return BelongsTo<Subscription, $this> */
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
@@ -68,11 +79,13 @@ class UsageRecord extends Model
     // Scopes
     // -------------------------------------------------------------------------
 
+    /** @param Builder<UsageRecord> $query */
     public function scopeForFeature(Builder $query, string $feature): void
     {
         $query->where('feature', $feature);
     }
 
+    /** @param Builder<UsageRecord> $query */
     public function scopeInPeriod(Builder $query, DateTimeInterface $start, DateTimeInterface $end): void
     {
         $query->whereBetween('recorded_at', [$start, $end]);

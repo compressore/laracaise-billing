@@ -22,9 +22,10 @@ abstract class TestCase extends Orchestra
     {
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', [
-            'driver'   => 'sqlite',
-            'database' => ':memory:',
-            'prefix'   => '',
+            'driver'                  => 'sqlite',
+            'database'                => ':memory:',
+            'prefix'                  => '',
+            'foreign_key_constraints' => true,
         ]);
 
         $app['config']->set('laracaise-billing.driver', 'null');
