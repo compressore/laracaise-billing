@@ -80,6 +80,15 @@ class SubscriptionFactory extends Factory
         return $this->state(['status' => SubscriptionStatus::Pending]);
     }
 
+    public function expired(): static
+    {
+        return $this->state([
+            'status'             => SubscriptionStatus::Expired,
+            'cancelled_at'       => now(),
+            'current_period_end' => now()->subSecond(),
+        ]);
+    }
+
     public function withProvider(string $provider, ?string $providerId = null): static
     {
         return $this->state([
