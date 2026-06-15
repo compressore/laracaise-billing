@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Laracaise\Billing;
 
 use Illuminate\Support\ServiceProvider;
+use Laracaise\Billing\Services\FeatureService;
+use Laracaise\Billing\Services\UsageService;
 
 class LaracaiseBillingServiceProvider extends ServiceProvider
 {
@@ -14,6 +16,11 @@ class LaracaiseBillingServiceProvider extends ServiceProvider
             __DIR__.'/../config/laracaise-billing.php',
             'laracaise-billing'
         );
+
+        $this->app->singleton(FeatureService::class);
+        $this->app->singleton(UsageService::class);
+        $this->app->singleton(BillingManager::class);
+        $this->app->alias(BillingManager::class, 'billing');
     }
 
     public function boot(): void

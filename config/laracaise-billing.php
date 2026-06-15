@@ -42,4 +42,21 @@ return [
         // 'paystack' => [...]
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Usage Tracking
+    |--------------------------------------------------------------------------
+    |
+    | Controls concurrency protection when recording feature usage.
+    |
+    |   atomic      — re-checks the aggregate inside a DB transaction (default)
+    |   pessimistic — also acquires SELECT FOR UPDATE on the subscription row
+    |   none        — no transaction; suitable only for low-traffic scenarios
+    |
+    */
+
+    'usage_tracking' => [
+        'locking' => env('BILLING_USAGE_LOCKING', 'atomic'),
+    ],
+
 ];
