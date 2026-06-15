@@ -20,20 +20,70 @@ A flexible billing package for Laravel applications.
 
 ```bash
 composer require laracaise/billing
-```
-
-Publish the config file:
-
-```bash
-php artisan vendor:publish --tag="laracaise-billing-config"
-```
-
-Publish the migrations:
-
-```bash
-php artisan vendor:publish --tag="laracaise-billing-migrations"
+php artisan billing:install   # publishes config + migrations
 php artisan migrate
 ```
+
+`billing:install` is a single shortcut for the two `vendor:publish` commands. If you need to re-publish after an upgrade, pass `--force`.
+
+---
+
+## Quick start
+
+After installation, the minimum to get billing working:
+
+**1. Add the `Billable` trait to your model**
+
+```php
+// app/Models/User.php  (or Team, Organisation, etc.)
+use Laracaise\Billing\Concerns\Billable;
+
+class User extends Authenticatable
+{
+    use Billable;
+}
+```
+
+**2. Define at least one plan** in `config/laracaise-billing.php`, then sync it:
+
+```php
+'plans' => [
+    'pro' => [
+        'name'     => 'Pro',
+        'amount'   => 125_00,       // in cents (R125.00)
+        'currency' => 'ZAR',
+        'interval' => 'monthly',
+        'features' => [
+            'reports'   => ['value' => true,  'resettable' => false], // flag: on/off
+            'api_calls' => ['value' => 1000,  'resettable' => true],  // numeric cap
+            'storage'   => ['value' => null,  'resettable' => false], // null = unlimited
+        ],
+    ],
+],
+```
+
+```bash
+php artisan billing:sync
+```
+
+**3. Subscribe a user**
+
+```php
+$plan = \Laracaise\Billing\Models\Plan::where('slug', 'pro')->firstOrFail();
+$user->billing()->subscribe($plan);
+```
+
+**4. Gate a route**
+
+```php
+Route::middleware(['auth', 'billing.active'])->group(function () {
+    Route::get('/app', DashboardController::class);
+});
+```
+
+For a full walkthrough — Paystack checkout, usage tracking, multi-tenant setup — see [`docs/integration-guides.md`](docs/integration-guides.md).
+
+---
 
 ## Configuration
 
@@ -107,30 +157,14 @@ Without a route parameter, middleware checks the authenticated user. When guardi
 ### Artisan commands
 
 ```bash
-php artisan billing:install
-php artisan billing:sync
-php artisan billing:reset-usage {subscription_id} --feature=api_calls
-php artisan billing:expire-subscriptions
-php artisan billing:process-renewals
+php artisan billing:install                                   # publish config + migrations
+php artisan billing:sync                                      # seed plans from config
+php artisan billing:reset-usage {subscription_id}             # reset usage counters
+php artisan billing:expire-subscriptions                      # expire ended subscriptions
+php artisan billing:process-renewals                          # advance billing periods
 ```
 
-`billing:sync` reads optional plan definitions from `config/laracaise-billing.php`:
-
-```php
-'plans' => [
-    'pro' => [
-        'name' => 'Pro',
-        'amount' => 125_00,
-        'currency' => 'ZAR',
-        'interval' => 'monthly',
-        'features' => [
-            'reports' => ['value' => true, 'resettable' => false],
-            'api_calls' => ['value' => 1000, 'resettable' => true],
-            'storage' => null,
-        ],
-    ],
-],
-```
+`billing:sync` reads plan definitions from `config/laracaise-billing.php` (see Quick start above for the format). The command is idempotent — safe to re-run in CI or deployment pipelines.
 
 Schedule recurring maintenance commands in your application:
 

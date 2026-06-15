@@ -82,6 +82,8 @@ class User extends Authenticatable
 
 The trait adds a `billing()` method returning a `BillingContext`, and two Eloquent relationships: `subscriptions()` and `payments()`.
 
+All billing operations go through `$model->billing()->...`. There is no `Billing::for($model)` shortcut — `billing()` on the model is the entry point. The `Billing` facade exposes plan-level and driver-level helpers (`Billing::plan()`, `Billing::fake()`, etc.) but not per-entity context.
+
 ### 2.2 Define plans
 
 Plans can be seeded two ways — via config or directly in your database seeder.
@@ -179,20 +181,44 @@ When the authenticated user has no active subscription, `billing.active` respond
 
 ### 2.5 Check entitlements in code
 
+All billing checks start from `$entity->billing()`. There is no `Billing::for($entity)` static shortcut — the entry point is always the `billing()` method on the model.
+
+**Flag features** — features with a `true`/`false` value in the plan. Use `hasFeature()`:
+
 ```php
-// Controller or policy
+// "invoices" is a flag: true on Pro, false on Starter
+if (! $user->billing()->hasFeature('invoices')) {
+    abort(402, 'Your plan does not include invoices. Upgrade to Pro.');
+}
+
 if (! $user->billing()->hasFeature('reports')) {
-    abort(403, 'Your plan does not include reports.');
+    abort(402, 'Reports are not available on your current plan.');
 }
+```
 
-// Check usage before an expensive operation
+**Metered features** — features with a numeric cap (e.g. 1000 API calls per month). Use `canUse()` before acting, then `consume()` to record:
+
+```php
+// "api_calls" is metered: 500 on Starter, 5000 on Pro
 if (! $user->billing()->canUse('api_calls')) {
-    throw new ApiLimitExceededException();
+    return response()->json(['error' => 'Monthly API limit reached.'], 429);
 }
 
-// Record usage (throws UsageLimitExceededException if limit is breached)
+// Record the usage (throws UsageLimitExceededException if the limit is already hit)
 $user->billing()->consume('api_calls');
 ```
+
+**Unlimited features** — features where `value` is `null` in the plan. `canUse()` and `hasFeature()` both return `true`; `remaining()` returns `null`.
+
+**Choosing between `hasFeature` and `canUse`**:
+
+| Feature type | Plan `value` | Method to use |
+|---|---|---|
+| Boolean access flag | `true` or `false` | `hasFeature('invoices')` |
+| Numeric monthly cap | `500`, `5000` | `canUse('api_calls')` + `consume()` |
+| Unlimited | `null` | Either — both return `true` |
+
+Both methods return `false` when the user has no accessible subscription, so no separate "is subscribed" check is needed in most cases.
 
 ### 2.6 Show subscription state in views
 
@@ -426,6 +452,8 @@ The `FeatureService` always checks for an active override before falling back to
 ---
 
 ## 4. Filament admin panel
+
+> **Filament is not required.** §2 and §3 cover everything you need for a working app without any admin panel. This section is for teams that want to build a Filament-based billing admin, or for context on the planned `laracaise/billing-filament` companion package. Skip to §5 if you are not using Filament.
 
 `laracaise/billing` is headless by design. It does not ship Filament resources, pages, or components. This section describes what a Filament-based admin panel for billing **would** look like — either as a bespoke admin you build in your own app, or as a future `laracaise/billing-filament` package.
 
