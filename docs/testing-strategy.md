@@ -15,27 +15,31 @@
 tests/
 ├── Pest.php                        # bootstrap — wires TestCase
 ├── TestCase.php                    # Orchestra base, loads package provider
+├── Fixtures/
+│   └── BillableModel.php           # in-memory Eloquent model for polymorphic tests
 ├── Unit/
 │   ├── ServiceProviderTest.php     # config registered, provider boots
 │   ├── Models/
 │   │   ├── PlanTest.php
+│   │   ├── PlanFeatureTest.php
 │   │   ├── SubscriptionTest.php
-│   │   ├── InvoiceTest.php
-│   │   └── UsageRecordTest.php
+│   │   ├── SubscriptionOverrideTest.php
+│   │   ├── UsageRecordTest.php
+│   │   └── PaymentTest.php
 │   ├── Services/
 │   │   ├── SubscriptionServiceTest.php
-│   │   ├── UsageServiceTest.php
+│   │   ├── UsageServiceTest.php          # includes concurrency scenarios
 │   │   └── InvoiceServiceTest.php
 │   └── Drivers/
 │       ├── NullDriverTest.php
-│       ├── ManualDriverTest.php    # pending transaction, mark-paid flow
-│       └── PaystackDriverTest.php  # HTTP-mocked
+│       ├── ManualDriverTest.php          # pending payment, mark-paid flow
+│       └── PaystackDriverTest.php        # HTTP-mocked
 └── Feature/
-    ├── BillableTraitTest.php       # end-to-end through BillingContext
+    ├── BillableTraitTest.php             # polymorphic relationships
     ├── SubscriptionLifecycleTest.php
-    ├── UsageLimitTest.php
-    ├── ManualInvoicingTest.php
-    └── WebhookTest.php             # inbound webhook, HMAC verification
+    ├── UsageLimitTest.php                # includes concurrent usage checks
+    ├── WebhookTest.php                   # signature verification + idempotency
+    └── DuplicateSubscriptionTest.php     # multi-subscription collision enforcement
 ```
 
 ---
@@ -48,21 +52,29 @@ tests/
 protected function defineDatabaseMigrations(): void
 {
     $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    Schema::create('test_billables', function (Blueprint $table) {
+        $table->ulid('id')->primary();
+        $table->string('name')->default('test');
+        $table->timestamps();
+    });
 }
 ```
 
-Each test runs in a database transaction that is rolled back after the test, so the database is clean for every test without truncation overhead.
+`foreign_key_constraints` is enabled in the test SQLite connection so cascade deletes are enforced. Each test runs inside a database transaction that is rolled back after the test, so the database is clean without truncation overhead.
 
 ---
 
 ## Model factories
 
-Every package model ships with a factory registered in the service provider. Tests use factories, not raw `Model::create()` calls, so fixture data stays DRY and readable:
+Every package model ships with a factory. Tests use factories, not raw `Model::create()` calls, so fixture data stays DRY and readable:
 
 ```php
-$plan = Plan::factory()->monthly()->withFeature('api_calls', 1000)->create();
-$subscription = Subscription::factory()->active()->for($team)->on($plan)->create();
+$plan = Plan::factory()->monthly()->create();
+$subscription = Subscription::factory()->active()->forOwner($team)->for($plan)->create();
+$payment = Payment::factory()->succeeded()->forOwner($team)->create();
 ```
+
+Factories use placeholder morph values by default and provide a `forOwner(Model $owner)` state method to bind the correct `subscriptionable_type` and `subscriptionable_id`.
 
 ---
 
@@ -82,13 +94,13 @@ $subscription = Subscription::factory()->active()->for($team)->on($plan)->create
 ```php
 beforeEach(fn () => Billing::fake());
 
-it('records a transaction when a charge succeeds', function () {
-    $invoice = Invoice::factory()->open()->create();
+it('records a payment when a charge succeeds', function () {
+    $payment = Payment::factory()->pending()->create();
 
-    $team->billing()->charge($invoice);
+    $entity->billing()->charge($payment);
 
-    Billing::assertCharged($invoice);
-    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Paid);
+    Billing::assertCharged($payment);
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
 });
 ```
 
@@ -103,18 +115,18 @@ Http::fake([
     'api.paystack.co/transaction/initialize' => Http::response([
         'status' => true,
         'data'   => [
-            'reference'        => 'PAY-test-001',
+            'reference'         => 'PAY-test-001',
             'authorization_url' => 'https://checkout.paystack.com/xxxxx',
-            'access_code'      => 'xxxxx',
+            'access_code'       => 'xxxxx',
         ],
     ], 200),
 ]);
 
 $driver = app(PaystackDriver::class);
-$result = $driver->initializeTransaction($invoice);
+$result = $driver->initializeTransaction($payment);
 
 expect($result->reference)->toBe('PAY-test-001');
-expect($result->meta['access_code'])->toBe('xxxxx');   // Paystack-specific field lives in $meta
+expect($result->meta['access_code'])->toBe('xxxxx');
 Http::assertSent(fn ($r) => str_contains($r->url(), '/transaction/initialize'));
 ```
 
@@ -122,29 +134,96 @@ Http::assertSent(fn ($r) => str_contains($r->url(), '/transaction/initialize'));
 
 ## Webhook testing
 
+### Happy path
+
 ```php
-it('marks the invoice paid on charge.success webhook', function () {
-    $invoice = Invoice::factory()->open()->create();
-    $reference = 'PAY-webhook-001';
-
-    $payload = json_encode([
+it('marks the payment succeeded on charge.success webhook', function () {
+    $payment  = Payment::factory()->pending()->create(['provider_reference' => 'PAY-webhook-001']);
+    $payload  = json_encode([
         'event' => 'charge.success',
-        'data'  => ['reference' => $reference, 'amount' => $invoice->total],
+        'data'  => ['id' => 99991, 'reference' => 'PAY-webhook-001', 'amount' => $payment->amount],
     ]);
-
     $signature = hash_hmac('sha512', $payload, config('laracaise-billing.drivers.paystack.webhook_secret'));
 
     $this->postJson('/billing/webhook/paystack', json_decode($payload, true), [
         'X-Paystack-Signature' => $signature,
     ])->assertOk();
 
-    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Paid);
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+    expect(WebhookEvent::where('provider_event_id', 99991)->exists())->toBeTrue();
 });
+```
 
+### Signature rejection
+
+```php
 it('rejects webhooks with an invalid signature', function () {
-    $this->postJson('/billing/webhook/paystack', [], [
+    $this->postJson('/billing/webhook/paystack', ['event' => 'charge.success'], [
         'X-Paystack-Signature' => 'invalid',
     ])->assertUnauthorized();
+});
+```
+
+### Idempotency — duplicate delivery
+
+```php
+it('does not double-process a webhook event delivered twice', function () {
+    $payment  = Payment::factory()->pending()->create(['provider_reference' => 'PAY-dup-001']);
+    $payload  = json_encode([
+        'event' => 'charge.success',
+        'data'  => ['id' => 99992, 'reference' => 'PAY-dup-001', 'amount' => $payment->amount],
+    ]);
+    $signature = hash_hmac('sha512', $payload, config('laracaise-billing.drivers.paystack.webhook_secret'));
+    $headers   = ['X-Paystack-Signature' => $signature];
+
+    // First delivery — processed normally
+    $this->postJson('/billing/webhook/paystack', json_decode($payload, true), $headers)->assertOk();
+
+    // Second delivery — must be acknowledged but not re-processed
+    $this->postJson('/billing/webhook/paystack', json_decode($payload, true), $headers)->assertOk();
+
+    // Payment succeeded exactly once
+    expect(Payment::where('provider_reference', 'PAY-dup-001')->where('status', PaymentStatus::Succeeded)->count())->toBe(1);
+    expect(WebhookEvent::where('provider_event_id', 99992)->count())->toBe(1);
+});
+```
+
+---
+
+## Usage concurrency testing
+
+SQLite's in-memory DB is single-connection, so true concurrent locking cannot be tested in unit tests. Instead:
+
+- **Unit tests** verify that the service re-checks the aggregate inside the transaction and raises `UsageExceededException` when the aggregate equals the limit.
+- **Integration notes** document that the `atomic` and `pessimistic` locking modes must be verified against a real MySQL or PostgreSQL instance in the host app's integration suite.
+
+```php
+it('raises UsageExceededException when the limit is reached mid-transaction', function () {
+    $plan         = Plan::factory()->create();
+    $feature      = PlanFeature::factory()->for($plan)->create(['feature' => 'api_calls', 'value' => '10']);
+    $subscription = Subscription::factory()->active()->for($plan)->create();
+
+    // Seed usage up to the limit
+    UsageRecord::factory()->count(10)->for($subscription)->create(['feature' => 'api_calls', 'quantity' => 1]);
+
+    expect(fn () => app(UsageService::class)->consume($subscription, 'api_calls', 1))
+        ->toThrow(UsageExceededException::class);
+});
+```
+
+---
+
+## Duplicate subscription testing
+
+```php
+it('raises DuplicateSubscriptionException when subscribing to an already active plan name', function () {
+    $plan   = Plan::factory()->active()->create();
+    $entity = BillableModel::factory()->create();
+
+    Subscription::factory()->active()->forOwner($entity)->create(['name' => 'default']);
+
+    expect(fn () => $entity->billing()->subscribe($plan, name: 'default'))
+        ->toThrow(DuplicateSubscriptionException::class);
 });
 ```
 
@@ -155,9 +234,9 @@ it('rejects webhooks with an invalid signature', function () {
 All events are testable via Laravel's `Event::fake()`:
 
 ```php
-Event::fake([SubscriptionCreated::class, InvoiceIssued::class]);
+Event::fake([SubscriptionCreated::class, PaymentSucceeded::class]);
 
-$team->billing()->subscribe('pro');
+$entity->billing()->subscribe('pro');
 
 Event::assertDispatched(SubscriptionCreated::class, fn ($e) => $e->subscription->plan->slug === 'pro');
 ```
@@ -196,7 +275,8 @@ All `@phpstan-ignore` suppressions must include a comment explaining why suppres
 | PHP | Laravel | Stability |
 |---|---|---|
 | 8.4 | 12.* | prefer-stable |
-| 8.4 | 13.* | prefer-stable (when released) |
+
+Laravel 13 will be added to the matrix once it is released and all tests pass against it. Do not add the `^13.0` constraint to `composer.json` before CI confirms it.
 
 Matrix is defined in `.github/workflows/run-tests.yml`. PHPStan runs as a separate job so test failures and analysis failures are independently visible.
 

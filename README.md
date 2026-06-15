@@ -14,7 +14,7 @@ A flexible billing package for Laravel applications.
 ## Requirements
 
 - PHP ^8.4
-- Laravel ^12.0 || ^13.0
+- Laravel ^12.0
 
 ## Installation
 
@@ -43,13 +43,24 @@ After publishing, the config file lives at `config/laracaise-billing.php`.
 return [
     'driver'   => env('BILLING_DRIVER', 'paystack'),
     'currency' => env('BILLING_CURRENCY', 'ZAR'),
-    'drivers'  => [],
+
+    'usage_tracking' => [
+        'locking' => env('BILLING_USAGE_LOCKING', 'atomic'), // atomic | pessimistic | none
+    ],
+
+    'drivers'  => [
+        'paystack' => [
+            'secret_key'     => env('PAYSTACK_SECRET_KEY'),
+            'public_key'     => env('PAYSTACK_PUBLIC_KEY'),
+            'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'),
+        ],
+    ],
 ];
 ```
 
 ## Usage
 
-Documentation coming soon.
+Documentation coming soon. See the `docs/` directory for architecture, schema, and API references.
 
 ## Testing
 

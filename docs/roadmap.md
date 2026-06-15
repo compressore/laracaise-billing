@@ -28,30 +28,28 @@ Status key: ✅ Done · 🔄 In progress · 🔲 Planned · 💡 Idea
 
 ---
 
-## Phase 2 — Database layer 🔲
+## Phase 2 — Database layer ✅
 
-- [ ] Migration: `billing_plans`
-- [ ] Migration: `billing_plan_features`
-- [ ] Migration: `billing_subscriptions`
-- [ ] Migration: `billing_usage_records`
-- [ ] Migration: `billing_invoices`
-- [ ] Migration: `billing_invoice_items`
-- [ ] Migration: `billing_transactions`
-- [ ] Migration: `billing_payment_methods`
-- [ ] Enums: `SubscriptionStatus`, `InvoiceStatus`, `TransactionStatus`
+- [x] Migration: `billing_plans`
+- [x] Migration: `billing_plan_features`
+- [x] Migration: `billing_subscriptions` (columns: `provider`, `provider_id`)
+- [x] Migration: `billing_usage_records`
+- [x] Migration: `billing_payments` (columns: `provider`, `provider_reference`, `provider_response`)
+- [x] Enums: `BillingInterval`, `SubscriptionStatus`, `PaymentStatus`, `PaymentType`
+
+Migrations for `billing_webhook_events`, `billing_payment_methods`, and `billing_invoices` are planned in later phases.
 
 ---
 
-## Phase 3 — Eloquent models 🔲
+## Phase 3 — Eloquent models ✅
 
-- [ ] `Plan` model + `PlanFeature` model with relationship
-- [ ] `Subscription` model with status machine methods (no service yet)
-- [ ] `UsageRecord` model (append-only)
-- [ ] `Invoice` + `InvoiceItem` models
-- [ ] `Transaction` model (immutable after creation)
-- [ ] `PaymentMethod` model
-- [ ] `Billable` trait (relations only, no logic)
-- [ ] Model factories for all models
+- [x] `Plan` model + factory
+- [x] `PlanFeature` model + factory
+- [x] `Subscription` model with status methods and scopes + factory
+- [x] `SubscriptionOverride` model + factory
+- [x] `UsageRecord` model (append-only, no `updated_at`) + factory
+- [x] `Payment` model + factory
+- [x] `Billable` trait (relations only — `subscriptions()`, `payments()`)
 
 ---
 
@@ -67,45 +65,49 @@ Status key: ✅ Done · 🔄 In progress · 🔲 Planned · 💡 Idea
 ## Phase 5 — Subscriptions 🔲
 
 - [ ] `SubscriptionService` — subscribe, swap, cancel, resume
+- [ ] `DuplicateSubscriptionException` — raised when a second active/trialing subscription with the same name is attempted
 - [ ] `BillingContext` — first methods: `subscribe()`, `cancel()`, `onPlan()`, `subscribed()`
 - [ ] Subscription state machine + status transitions
+- [ ] Multi-subscription collision enforcement: service layer check + partial unique index migration (MySQL/PG)
 - [ ] Events: `SubscriptionCreated`, `SubscriptionCancelled`, `SubscriptionSwapped`, `SubscriptionResumed`
-- [ ] Tests: full lifecycle for each transition
+- [ ] Tests: full lifecycle for each transition, `DuplicateSubscriptionException` on collision
 
 ---
 
 ## Phase 6 — Usage limits 🔲
 
-- [ ] `UsageService` — `record()`, `used()`, `remaining()`, `canUse()`
+- [ ] `UsageService` — `consume()`, `used()`, `remaining()`, `canConsume()`
 - [ ] `BillingContext` — usage methods
 - [ ] `UsageExceededException`
+- [ ] `usage_tracking.locking` config key: `atomic` (default), `pessimistic`, `none`
+- [ ] Concurrency-safe consume: re-check aggregate inside DB transaction before inserting `UsageRecord`
 - [ ] Period reset logic tied to `current_period_end`
-- [ ] Tests: limit enforcement, unlimited features, flag features, period reset
+- [ ] Tests: limit enforcement, unlimited features, flag features, period reset, limit re-check at transaction boundary
 
 ---
 
-## Phase 7 — Manual billing & invoicing 🔲
+## Phase 7 — Manual billing 🔲
 
-- [ ] `InvoiceService` — build, issue, void
-- [ ] `InvoiceBuilder` — fluent builder returned by `->invoice()`
-- [ ] Invoice number auto-generation (`INV-YYYY-NNNN`)
-- [ ] Events: `InvoiceCreated`, `InvoiceIssued`, `InvoicePaid`, `InvoiceVoided`
-- [ ] Tests: line items, tax calculation, number sequence
+- [ ] `ManualDriver` implementation
+- [ ] `billing:mark-paid {reference}` artisan command
+- [ ] `NullDriver` (test-only no-op)
+- [ ] `BillingManager::extend()` for custom drivers
+- [ ] `Billing::fake()` + `FakeDriver` with assertions
+- [ ] Tests: pending payment, operator mark-paid flow, driver faking
 
 ---
 
 ## Phase 8 — Paystack driver 🔲
 
 - [ ] `PaymentDriverInterface` contract
-- [ ] `NullDriver` (test-only no-op)
-- [ ] `ManualDriver` (production out-of-band: EFT, bank transfer)
 - [ ] `PaystackDriver` — `initializeTransaction`, `verifyTransaction`, `charge`, `refund`, `createCustomer`
+- [ ] Migration: `billing_webhook_events` with unique index on `(provider, provider_event_id)`
+- [ ] Unique index migration: `billing_payments(provider, provider_reference)`
 - [ ] Paystack webhook controller + route registration
 - [ ] HMAC signature verification middleware
+- [ ] Idempotent webhook handler: verify signature → verify transaction → check `billing_webhook_events` → process in DB transaction → commit and fire events
 - [ ] Webhook event handlers: `charge.success`, `charge.failed`, `refund.processed`
-- [ ] `BillingManager::extend()` for custom drivers
-- [ ] `Billing::fake()` + `FakeDriver` with assertions
-- [ ] Tests: all driver methods (mocked HTTP), webhook verification, signature rejection
+- [ ] Tests: all driver methods (mocked HTTP), signature rejection, duplicate webhook delivery (idempotency), payment reference uniqueness
 
 ---
 
@@ -122,29 +124,35 @@ Status key: ✅ Done · 🔄 In progress · 🔲 Planned · 💡 Idea
 ## Phase 10 — Developer experience 🔲
 
 - [ ] `Artisan billing:verify {reference}` — manual transaction check
-- [ ] `Artisan billing:mark-paid {reference}` — operator marks a ManualDriver transaction paid
-- [ ] `Billing::fake()` documentation and examples
 - [ ] Published config documentation comments
 - [ ] Example `AppServiceProvider` snippets
 - [ ] PHPDoc on all public classes
+- [ ] Pre-release audit: remove `minimum-stability: dev`, add version tags, clean up `composer.json` constraints
 
 ---
 
 ## Future / community 💡
 
-- `laracaise/billing-filament` — Filament v3 panel with plan manager, subscription table, invoice viewer
-- Additional drivers: Stripe, Flutterwave, Ozow, SnapScan
+- `laracaise/billing-filament` — Filament v3 panel with plan manager, subscription table, payment viewer
+- Additional drivers: Stripe, Flutterwave, Ozow, SnapScan, Yoco
 - Laravel Nova resource pack
 - Webhooks for outbound events (host app subscribes to billing lifecycle via webhooks to its own endpoints)
 - Proration support for mid-cycle plan swaps
 - Coupon / discount code support
 - Multi-currency subscription support
+- Laravel 13 CI matrix entry (added when Laravel 13 releases and all tests confirm passing)
 
 ---
 
 ## Versioning policy
 
 - `v0.x` — unstable; API may change between minor versions
-- `v1.0` — stable public API (Phases 2–9 complete, all tests green, Larastan level 9)
+- `v1.0` — stable public API (Phases 4–10 complete, all tests green, Larastan level 9 clean)
 - `v1.x` — backwards-compatible additions only
 - `v2.0` — breaking changes, new major with migration guide
+
+**Pre-release stability**: `minimum-stability: dev` is permitted during active development (`v0.x`). Before tagging `v1.0`:
+- Remove or raise `minimum-stability` to `stable`
+- Ensure all dependencies have stable releases
+- Review and clean `composer.json` version constraints
+- Tag a release candidate and run the full CI matrix
