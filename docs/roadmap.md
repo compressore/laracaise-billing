@@ -86,14 +86,14 @@ Migrations for `billing_webhook_events`, `billing_payment_methods`, and `billing
 
 ---
 
-## Phase 7 — Manual billing 🔲
+## Phase 7 — Integration guides and optional UI strategy ✅
 
-- [ ] `ManualDriver` implementation
-- [ ] `billing:mark-paid {reference}` artisan command
-- [ ] `NullDriver` (test-only no-op)
-- [ ] `BillingManager::extend()` for custom drivers
-- [ ] `Billing::fake()` + `FakeDriver` with assertions
-- [ ] Tests: pending payment, operator mark-paid flow, driver faking
+- [x] `docs/integration-guides.md`
+  - [x] Installation guide (composer, publish, migrate, env, scheduler)
+  - [x] Standard single-tenant app guide (User as billable)
+  - [x] Multi-tenant SaaS guide (Team/Organisation as billable, tenancy-agnostic)
+  - [x] Filament admin panel guide (Plans, Subscriptions, Payments, Usage, Overrides)
+  - [x] Why Filament is optional and the `laracaise/billing-filament` separation rationale
 
 ---
 

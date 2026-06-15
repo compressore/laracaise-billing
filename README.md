@@ -72,7 +72,16 @@ PAYSTACK_WEBHOOK_SECRET=xxxxx
 
 ## Usage
 
-Documentation is still evolving. See the `docs/` directory for architecture, schema, and API references.
+See the `docs/` directory for full documentation:
+
+| Document | Contents |
+|---|---|
+| [`docs/integration-guides.md`](docs/integration-guides.md) | Installation, standard app setup, multi-tenant setup, Filament admin guide |
+| [`docs/public-api.md`](docs/public-api.md) | Full `BillingContext` API reference |
+| [`docs/architecture.md`](docs/architecture.md) | Layer overview, service descriptions, middleware, events |
+| [`docs/payment-drivers.md`](docs/payment-drivers.md) | Paystack, Manual, Null drivers; custom driver registration |
+| [`docs/database-schema.md`](docs/database-schema.md) | All table schemas and relationships |
+| [`docs/testing-strategy.md`](docs/testing-strategy.md) | Test layout, factories, driver faking, webhook testing |
 
 ### Route middleware
 
