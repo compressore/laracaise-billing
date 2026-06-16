@@ -195,7 +195,7 @@ See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Security
 
-If you discover a security vulnerability, please email christian@twomenandatruck.co.za instead of opening an issue.
+If you discover a security vulnerability, please email c.sangwa@yahoo.fr instead of opening an issue.
 
 ## License
 
